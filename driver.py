@@ -1,17 +1,30 @@
 # driver.py - Interface de leitura da bateria para termux-battery-status
 import json
+import os
 import subprocess
 import time
 from typing import Optional
 
-from config.constants import DELAY_CHARGING
+from config.constants import DEFAULT_DIRPATH, DELAY_CHARGING, DELAY_SUBPROCESS
 
 def to_linux_str(termux_str: str) -> str:
     return termux_str[0] + termux_str[1:].lower().replace('_', ' ')
 
+tmp = os.getenv('DEFAULT_DIRPATH')
+if tmp:
+    try:
+        subprocess.run([tmp], check=True, timeout=DELAY_SUBPROCESS)
+    except:
+        print('#error Comando inválido: "%s"' % (tmp))
+        raise RuntimeError('error when tried to run DEFAULT_DIRPATH')
+    else:
+        DEFAULT_DIRPATH = tmp
+
+
 class Battery:
     """Classe Battery para acessar informações da bateria"""
-    def __init__(self, dirpath: str = '', check_unit: bool = True):
+    def __init__(self, dirpath: str = DEFAULT_DIRPATH, check_unit: bool = True):
+        self._cmd = dirpath
         self._unit_checked = check_unit
         self._sp_last_call = 0
         self._sp_data = {
@@ -33,7 +46,7 @@ class Battery:
         self._sp_last_call = tnow
 
         proc = subprocess.run(
-            ['termux-battery-status'],
+            [self._cmd],
             capture_output=True,
             check=True
         )

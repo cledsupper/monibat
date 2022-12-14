@@ -10,6 +10,11 @@ DEFAULT_SETTINGS = {
     'voltage_typ': None
 }
 
+# Comando para obter o JSON com o estado da bateria
+DEFAULT_DIRPATH = 'termux-battery-status'
+
+DELAY_SUBPROCESS=7
+
 DELAY_CHARGING = 6
 DELAY_DISCHARGING = 60
 

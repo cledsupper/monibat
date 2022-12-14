@@ -18,7 +18,7 @@ while True:
     current = current if current else math.nan
     temp = temp if temp else math.nan
 
-    print('%2d:%02d { ' % (tm.tm_hour, tm.tm_min), end='')
+    print('%2d:%02d:%02d { ' % (tm.tm_hour, tm.tm_min, tm.tm_sec), end='')
     print('%d %%; ' % (batt.percent()), end='')
     print('%s; %0.2f A; ' % (batt.status(), current), end='')
     print('%0.1f °C }' % (temp))
