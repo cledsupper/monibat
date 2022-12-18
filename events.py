@@ -65,7 +65,6 @@ def run():
 
   now = time.localtime()
   if day is None or now.tm_mday != day.tm_mday:
-    print('day: %d/%02d/%02d' % (now.tm_year, now.tm_mon, now.tm_mday))
     day = now
 
   o_btweaks = btweaks
@@ -109,6 +108,7 @@ def run():
     sday = time.mktime(day)
     snow = time.mktime(now)
     if (snow - sday) >= delay:
+      day = now
       status_refresh = True
 
   if status_refresh:

@@ -42,7 +42,11 @@ def termux_api_call(
       '--button1', 'encerrar', '--button1-action', 'termux-toast encerrar'
     ]
   else:
-    pass
+    pars = [
+      '--icon', icon,
+      '-t', 'Notify: %s' % (title),
+      '-c', message
+    ]
 
   try:
     if not as_toast:
@@ -69,7 +73,11 @@ def termux_api_call(
 
 
 def send_message(message: str, title = 'mensagem do serviço', icon = 'battery_std'):
-  pass
+  termux_api_call(
+    message,
+    title=title,
+    icon=icon
+  )
 
 
 def send_status(
