@@ -4,6 +4,7 @@
 
 import json
 import os
+import shlex
 import subprocess
 import time
 from typing import Optional
@@ -16,9 +17,13 @@ def to_linux_str(termux_str: str) -> str:
 tmp = os.getenv('BATTERY_DIRPATH')
 if tmp:
     try:
-        subprocess.run([tmp], check=True, timeout=SUBPROCESS_TIMEOUT)
+        subprocess.run(
+            shlex.split(tmp),
+            capture_output=True,
+            check=True,
+            timeout=SUBPROCESS_TIMEOUT
+        )
     except:
-        print('#error Comando falhou: "%s"' % (tmp))
         raise RuntimeError('error when tried to run BATTERY_DIRPATH')
     else:
         BATTERY_DIRPATH = tmp
@@ -49,7 +54,7 @@ class Battery:
         self._sp_last_call = tnow
 
         proc = subprocess.run(
-            [self._cmd],
+            shlex.split(self._cmd),
             capture_output=True,
             check=True
         )
@@ -115,9 +120,12 @@ class Battery:
 if __name__ == '__main__':
     battery = Battery()
     technology = battery.technology()
+    level = battery.percent()
+    health = battery.health()
     if technology is not None:
-        print('Battery ' + technology)
+        print('Battery (%s)' % (technology))
     else:
         print('Battery')
-    print('%d %%' % (battery.percent()))
-    print(battery.health())
+    print('Level: %d %%' % (level))
+    if health:
+        print('Health: ' + health)

@@ -6,6 +6,20 @@ from typing import Optional
 
 from config.constants import SUBPROCESS_TIMEOUT, TERMUX_ERRORS_LIMIT
 
+subprocess.run(
+    ['termux-toast', '-h'],
+    capture_output=True,
+    check=True,
+    timeout=SUBPROCESS_TIMEOUT
+)
+
+subprocess.run(
+    ['termux-notification', '-h'],
+    capture_output=True,
+    check=True,
+    timeout=SUBPROCESS_TIMEOUT
+)
+
 tcount = TERMUX_ERRORS_LIMIT
 
 def termux_api_call(
