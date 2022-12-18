@@ -1,29 +1,32 @@
 # driver.py - Interface de leitura da bateria para termux-battery-status
+# Utilizado pelos módulos:
+# -> events.py
+
 import json
 import os
 import subprocess
 import time
 from typing import Optional
 
-from config.constants import DEFAULT_DIRPATH, DELAY_CHARGING, DELAY_SUBPROCESS
+from config.constants import SUBPROCESS_TIMEOUT, BATTERY_DIRPATH, DELAY_CHARGING
 
 def to_linux_str(termux_str: str) -> str:
     return termux_str[0] + termux_str[1:].lower().replace('_', ' ')
 
-tmp = os.getenv('DEFAULT_DIRPATH')
+tmp = os.getenv('BATTERY_DIRPATH')
 if tmp:
     try:
-        subprocess.run([tmp], check=True, timeout=DELAY_SUBPROCESS)
+        subprocess.run([tmp], check=True, timeout=SUBPROCESS_TIMEOUT)
     except:
-        print('#error Comando inválido: "%s"' % (tmp))
-        raise RuntimeError('error when tried to run DEFAULT_DIRPATH')
+        print('#error Comando falhou: "%s"' % (tmp))
+        raise RuntimeError('error when tried to run BATTERY_DIRPATH')
     else:
-        DEFAULT_DIRPATH = tmp
+        BATTERY_DIRPATH = tmp
 
 
 class Battery:
     """Classe Battery para acessar informações da bateria"""
-    def __init__(self, dirpath: str = DEFAULT_DIRPATH, check_unit: bool = True):
+    def __init__(self, dirpath: str = BATTERY_DIRPATH, check_unit: bool = True):
         self._cmd = dirpath
         self._unit_checked = check_unit
         self._sp_last_call = 0
@@ -104,7 +107,7 @@ class Battery:
         """Tecnologia da bateria (Li-ion, Li-poly, etc.)"""
         return None
 
-    def status(self) -> Optional[str]:
+    def status(self) -> str:
         """Status da bateria: Charging, Discharging, Unknown, ..."""
         value = self._get_sp_data('status')
         return to_linux_str(value)

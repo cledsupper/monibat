@@ -1,5 +1,4 @@
 # Utilizado pelos módulos:
-# -> batttweaker
 
 from os import environ
 from os.path import join

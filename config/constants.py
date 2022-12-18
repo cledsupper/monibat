@@ -1,22 +1,15 @@
 # Utilizado pelos módulos:
-# -> batttweaker
-# -> driver
-
-DEFAULT_SETTINGS = {
-    'level_min': 0,
-    'level_max': 100,
-    'level_fix': False,
-    # voltage_typ é opcional
-    'voltage_typ': None
-}
+# -> driver, events.py
 
 # Comando para obter o JSON com o estado da bateria
-DEFAULT_DIRPATH = 'termux-battery-status'
+BATTERY_DIRPATH = 'termux-battery-status'
 
-DELAY_SUBPROCESS=7
+SUBPROCESS_TIMEOUT=7
 
 DELAY_CHARGING = 6
 DELAY_DISCHARGING = 60
+
+TERMUX_ERRORS_LIMIT = 15
 
 # DESIGN: propagar estes limites na interface!
 MIN_LEVEL_MIN = 0
