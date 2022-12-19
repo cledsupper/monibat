@@ -14,8 +14,15 @@ TERMUX_ERRORS_LIMIT = 15
 # DESIGN: propagar estes limites na interface!
 MIN_LEVEL_EMPTY = 0
 MAX_LEVEL_FULL = 100
+
 # É bom que seja bateria de lítio
-MIN_VOLTAGE_TYP = 3.6
+VOLTAGE_TYP = 3.6
+VOLTAGE_EMPTY = 3.4
+VOLTAGE_FULL = 4.2
+
+TEMP_MIN = 5.0
+TEMP_HOT = 40.0
+TEMP_MAX = 55.0
 
 DEFAULT_SETTINGS = {
     "percent": {
@@ -26,14 +33,14 @@ DEFAULT_SETTINGS = {
         "high": 80,
     },
     "voltage": {
-        "empty": 3.4,
-        "full": 4.2,
-        "low": 3.7,
-        "high": 4.1,
+        "empty": VOLTAGE_EMPTY,
+        "full": VOLTAGE_FULL,
+        "low": VOLTAGE_TYP,
+        "high": VOLTAGE_FULL,
     },
     "temp": {
-        "min": 5.0,
-        "high": 40.0,
-        "max": 55.0,
+        "min": TEMP_MIN,
+        "hot": TEMP_HOT,
+        "max": TEMP_MAX,
     }
 }
