@@ -7,8 +7,10 @@ import driver
 import notify
 
 from config.constants import DELAY_CHARGING, DELAY_DISCHARGING
+from config.tweaker import Configuration
 
 batt = driver.Battery()
+cfg = Configuration()
 
 def tweaks():
   global batt
@@ -62,6 +64,8 @@ def run():
   global now
   global btweaks
   global o_btweaks
+
+  cfg.update()
 
   now = time.localtime()
   if day is None or now.tm_mday != day.tm_mday:
