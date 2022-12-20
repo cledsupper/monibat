@@ -1,0 +1,21 @@
+{
+  "capacity": 4.0,
+  "percent": {
+    "empty": 0,
+    "full": 100,
+    "fix": true,
+    "low": 25,
+    "high": 75
+  },
+  "voltage": {
+    "empty": 3.4,
+    "full": 4.2,
+    "low": 3.7,
+    "high": 4.0
+  },
+  "temp": {
+    "min": 5.0,
+    "high": 40.0,
+    "max": 55
+  }
+}

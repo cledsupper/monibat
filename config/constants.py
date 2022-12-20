@@ -1,5 +1,29 @@
 # Utilizado pelos módulos:
-# -> tweaker, driver, events
+# -> tweaker, driver
+
+import os
+
+APP_NAME = 'MoniBat'
+
+APP_PID = os.getpid()
+
+LIB = os.path.join(os.environ['PREFIX'], 'lib', APP_NAME)
+
+APP_PY = os.path.join(LIB, 'service.py')
+
+
+# $HOME/.config/Notify-Py
+# PRESTE A ATENÇÃO A ALTERAR O NOME DESTE DIRETÓRIO
+CONFIG = os.path.join(os.environ['HOME'], '.config', APP_NAME)
+# $HOME/.config/Notify-Py/app.conf
+# ESTA B****A DEPENDE DA VARIÁVEL ANTERIOR!!!
+FCONFIG = os.path.join(CONFIG, 'config.json')
+
+CACHE = os.path.join(os.environ['HOME'], '.cache', APP_NAME)
+
+FCACHE = os.path.join(CACHE, 'logs.txt')
+
+FPID = os.path.join(CACHE, 'instance.pid')
 
 # Comando para obter o JSON com o estado da bateria
 BATTERY_DIRPATH = 'termux-battery-status'
@@ -11,12 +35,16 @@ DELAY_DISCHARGING = 60
 
 TERMUX_ERRORS_LIMIT = 15
 
-# DESIGN: propagar estes limites na interface!
-MIN_LEVEL_EMPTY = 0
-MAX_LEVEL_FULL = 100
+XCH_AWAKE = 7/3600 # 7 seconds for a check
+XCH_IDLE = 1/60 # 1 minute at sleep
+
+LEVEL_EMPTY = 0
+LEVEL_FULL = 100
+LEVEL_LOW = 20
+LEVEL_HIGH = 80
 
 # É bom que seja bateria de lítio
-VOLTAGE_TYP = 3.6
+VOLTAGE_TYP = 3.7
 VOLTAGE_EMPTY = 3.4
 VOLTAGE_FULL = 4.2
 
@@ -25,12 +53,13 @@ TEMP_HOT = 40.0
 TEMP_MAX = 55.0
 
 DEFAULT_SETTINGS = {
+    "capacity": 0.0,
     "percent": {
-        "empty": 0,
-        "full": 100,
+        "empty": LEVEL_EMPTY,
+        "full": LEVEL_FULL,
         "fix": False,
-        "low": 20,
-        "high": 80,
+        "low": LEVEL_LOW,
+        "high": LEVEL_HIGH,
     },
     "voltage": {
         "empty": VOLTAGE_EMPTY,

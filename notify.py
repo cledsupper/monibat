@@ -4,7 +4,7 @@
 import subprocess
 from typing import Optional
 
-from config.constants import SUBPROCESS_TIMEOUT, TERMUX_ERRORS_LIMIT
+from config.constants import APP_NAME, APP_PID, APP_PY, SUBPROCESS_TIMEOUT, TERMUX_ERRORS_LIMIT
 
 subprocess.run(
     ['termux-toast', '-h'],
@@ -37,14 +37,15 @@ def termux_api_call(
       '-i', 'batservice',
       '--icon', icon,
       '--ongoing', '--alert-once',
-      '-t', 'Notify: %s' % (title),
+      '-t', '%s: %s' % (APP_NAME, title),
       '-c', message,
-      '--button1', 'encerrar', '--button1-action', 'termux-toast encerrar'
+      '--button1', 'reiniciar', '--button1-action', 'python %s' % (APP_PY),
+      '--button2', 'encerrar', '--button2-action', 'kill %d' % (APP_PID)
     ]
   else:
     pars = [
       '--icon', icon,
-      '-t', 'Notify: %s' % (title),
+      '-t', '%s: %s' % (APP_NAME, title),
       '-c', message
     ]
 
@@ -58,7 +59,7 @@ def termux_api_call(
       )
     if as_toast or as_error or as_fatal:
       subprocess.run(
-        ['termux-toast', 'Notify: %s' % (message)],
+        ['termux-toast', '-g', 'top', '%s: %s' % (APP_NAME, message)],
         timeout = SUBPROCESS_TIMEOUT
       )
   except:
@@ -86,9 +87,14 @@ def send_status(
 ):
   message = '🔋 %d %% (%0.2f A) | 🌡 %0.1f °C' % (btweaks['percent'], btweaks['current'], btweaks['temp'])
   if btweaks['voltage'] is not None:
-    message += ' | ⚡ %0.2f' % (btweaks['voltage'])
+    message += ' | ⚡ %0.2f V' % (btweaks['voltage'])
+  if btweaks['charge'] is not None:
+    message += ' | %0.2f Ah' % (btweaks['charge'])
   termux_api_call(message, as_status = True)
-  
+
+
+def send_toast(message: str):
+  termux_api_call(message, as_toast = True)
 
 def status_remove():
   try:

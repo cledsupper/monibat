@@ -58,7 +58,7 @@ class Battery:
             capture_output=True,
             check=True
         )
-        text = proc.stdout.decode()
+        text = proc.stdout
         self._sp_data = json.loads(text)
 
     def _get_sp_data(self, key: str):

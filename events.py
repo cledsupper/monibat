@@ -1,122 +1,124 @@
 # Utilizado pelos módulos:
-# -> service.py
+# eventloop
 
-import time
-
-import driver
+from config.tweaker import Configuration, DELAY_CHARGING, DELAY_DISCHARGING, XCH_AWAKE, XCH_IDLE
 import notify
 
-from config.constants import DELAY_CHARGING, DELAY_DISCHARGING
-from config.tweaker import Configuration
+cfg: Configuration = None
 
-batt = driver.Battery()
-cfg = Configuration()
+def reset_alarms():
+  cfg.a_percent_high = False
+  cfg.a_percent_low = False
+  cfg.a_voltage_high = False
+  cfg.a_voltage_low = False
+  cfg.a_temp_hot = False
+  cfg.a_temp_min = False
+  cfg.a_temp_max = False
 
-def tweaks():
-  global batt
-  bd = {}
-  bd["percent"] = batt.percent()
-  bd["status"] = batt.status()
-  bd["current"] = batt.current_now()
-  bd["temp"] = batt.temp()
-  bd["voltage"] = batt.voltage()
-  bd["technology"] = batt.technology()
-  bd["health"] = batt.health()
-  
-  # TODO: tweak battery data here
+def install_config(m_cfg: Configuration):
+  global cfg
+  cfg = m_cfg
+  reset_alarms()
 
-  return bd
+def on_percent_increase(delta: int):
+  percent = cfg.btweaks["percent"]
 
-day = None
-now = None
-btweaks = None
-o_btweaks = None
+  if cfg.a_percent_low and percent >= cfg.data["percent"]["low"]:
+    cfg.a_percent_low = False
 
-delay = DELAY_DISCHARGING
+  if cfg.a_percent_high:
+    return
 
-def on_percent_increase(btweaks: dict, delta: int):
+  status = cfg.btweaks["status"]
+  if status == 'Charging' and percent >= cfg.data["percent"]["high"]:
+    cfg.a_percent_high = True
+    notify.send_message(
+      'Desconecte o carregador para preservar a saúde da bateria',
+      title = 'aviso de carga'
+    )
+
+
+def on_percent_decrease(delta: int):
+  percent = cfg.btweaks["percent"]
+
+  if cfg.a_percent_high and percent < cfg.data["percent"]["high"]:
+    cfg.a_percent_high = False
+
+  if cfg.a_percent_low:
+    return
+
+  status = cfg.btweaks["status"]
+  if status == 'Discharging' and percent < cfg.data["percent"]["low"]:
+    cfg.a_percent_low = True
+    notify.send_message(
+      'Conecte o carregador para preservar a saúde da bateria',
+      title = 'bateria fraca 📉'
+    )
+
+
+def on_voltage_increase(delta: int):
   pass
 
-def on_percent_decrease(btweaks: dict, delta: int):
+def on_voltage_decrease(delta: int):
   pass
 
-def on_voltage_increase(btweaks: dict, delta: int):
-  pass
+def on_temp_increase(delta: int):
+  temp = cfg.btweaks["temp"]
+  if cfg.a_temp_min and temp > cfg.data["temp"]["min"]:
+    cfg.a_temp_min = False
 
-def on_voltage_decrease(btweaks: dict, delta: int):
-  pass
+  if cfg.a_temp_max:
+    return
 
-def on_temp_increase(btweaks: dict, delta: int):
-  pass
+  if temp >= cfg.data["temp"]["max"]:
+    cfg.a_temp_max = True
+    notify.send_toast('📵 A BATERIA VAI EXPLODIR! 📵')
+    notify.send_message(
+      '📵 DESLIGUE O CELULAR AGORA! 📵',
+      title = 'A BATERIA VAI EXPLODIR 🧨 🔥'
+    )
+    return
 
-def on_temp_decrease(btweaks: dict, delta: int):
-  pass
+  if cfg.a_temp_hot:
+    return
 
-def on_status_change(btweaks: dict, from_status: str):
-  global delay
-  if btweaks['status'] == 'Charging':
-    delay = DELAY_CHARGING
+  if temp >= cfg.data["temp"]["hot"]:
+    cfg.a_temp_hot = True
+    notify.send_message(
+      'Habilite a economia da energia para esfriar a bateria',
+      title = 'aviso de temperatura'
+    )
+
+def on_temp_decrease(delta: int):
+  temp = cfg.btweaks["temp"]
+  if cfg.a_temp_hot and temp < cfg.data["temp"]["hot"]:
+    cfg.a_temp_hot = False
+    cfg.a_temp_max = False
+  elif cfg.a_temp_max and temp < cfg.data["temp"]["max"]:
+    cfg.a_temp_max = False
+
+  if cfg.a_temp_min:
+    return
+
+  if temp <= cfg.data["temp"]["min"]:
+    cfg.a_temp_min = True
+    notify.send_message(
+      'O desempenho da bateria deve piorar bastante! 📉',
+      title = 'bateria gelada 🧊'
+    )
+
+
+def on_status_change(from_status: str):
+  if cfg.btweaks['status'] == 'Charging':
+    cfg.delay = DELAY_CHARGING
+    notify.send_toast('O conector foi conectado 🔌🔋')
+    cfg.xch = XCH_AWAKE
   else:
-    delay = DELAY_DISCHARGING
-
-def run():
-  global day
-  global now
-  global btweaks
-  global o_btweaks
-
-  cfg.update()
-
-  now = time.localtime()
-  if day is None or now.tm_mday != day.tm_mday:
-    day = now
-
-  o_btweaks = btweaks
-  btweaks = tweaks()
-
-  # TODO: run events here
-  status_refresh = False
-  
-  if o_btweaks is None:
-    status_refresh = True
-
-  else:
-    dp = btweaks['percent'] - o_btweaks['percent']
-    if dp != 0:
-      if dp > 0: on_percent_increase(btweaks, dp)
-      else: on_percent_decrease(btweaks, dp)
-      status_refresh = True
-
-    if btweaks['voltage'] is not None:
-      old = int(o_btweaks['voltage'] * 10)
-      new = int(btweaks['voltage'] * 10)
-      dv = old - new
-      if dv != 0:
-        if dv > 0: on_voltage_increase(btweaks, dv)
-        else: on_voltage_decrease(btweaks, dv)
-        status_refresh = True
-
-    if btweaks['temp'] is not None:
-      old = int(o_btweaks['temp'] * 10)
-      new = int(btweaks['temp'] * 10)
-      dt = old - new
-      if dt != 0:
-        if dt > 0: on_temp_increase(btweaks, dt)
-        else: on_temp_decrease(btweaks, dt)
-        status_refresh = True
-  
-    if btweaks['status'] != o_btweaks['status']:
-      on_status_change(btweaks, o_btweaks['status'])
-      status_refresh = True
-
-    sday = time.mktime(day)
-    snow = time.mktime(now)
-    if (snow - sday) >= delay:
-      day = now
-      status_refresh = True
-
-  if status_refresh:
-    notify.send_status(btweaks)
-
-  time.sleep(1)
-  return True
+    cfg.delay = DELAY_DISCHARGING
+    if cfg.btweaks['status'] == 'Discharging':
+      if from_status == 'Full' or from_status == 'Charging':
+        notify.send_toast('O conector foi desconectado 🔋')
+      cfg.xch = XCH_AWAKE
+    elif cfg.btweaks['status'] == 'Not charging':
+      cfg.xch = XCH_IDLE
+  reset_alarms()
