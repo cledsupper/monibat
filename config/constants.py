@@ -35,9 +35,6 @@ DELAY_DISCHARGING = 60
 
 TERMUX_ERRORS_LIMIT = 15
 
-XCH_AWAKE = 7/3600 # 7 seconds for a check
-XCH_IDLE = 1/60 # 1 minute at sleep
-
 LEVEL_EMPTY = 0
 LEVEL_FULL = 100
 LEVEL_LOW = 20

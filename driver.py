@@ -10,10 +10,12 @@ import time
 import threading
 from typing import Optional
 
-from config.constants import SUBPROCESS_TIMEOUT, BATTERY_DIRPATH, DELAY_CHARGING, XCH_AWAKE
+from config.constants import SUBPROCESS_TIMEOUT, BATTERY_DIRPATH, DELAY_CHARGING
+
 
 def to_linux_str(termux_str: str) -> str:
     return termux_str[0] + termux_str[1:].lower().replace('_', ' ')
+
 
 tmp = os.getenv('BATTERY_DIRPATH')
 if tmp:
@@ -32,6 +34,7 @@ if tmp:
 
 class Battery:
     """Classe Battery para acessar informações da bateria"""
+
     def __init__(self, dirpath: str = BATTERY_DIRPATH, check_unit: bool = True):
         self._cmd = dirpath
         self._unit_checked = check_unit
@@ -45,10 +48,10 @@ class Battery:
             'plugged': 'UNPLUGGED'
         }
         self._td_up = False
-        self._td_cap = None
-        self._td_eng = None
-        self._td_eng_lock = None
-        self._td = None
+        self._td_cap: Optional[float] = None
+        self._td_eng: Optional[float] = None
+        self._td_eng_lock = threading.Lock()
+        self._td: Optional[threading.Thread] = None
         self.check_call()
 
     def check_call(self):
@@ -74,13 +77,14 @@ class Battery:
 
     def get_unit(self) -> str:
         """Retorna a unidade ((A)mpère ou (W)atts) das medições de consumo elétrico."""
-        if not self._unit_checked: self._unit_checked = True
+        if not self._unit_checked:
+            self._unit_checked = True
         return 'A'
 
     def percent(self) -> int:
         """Nível de carga da bateria em percentual"""
         if self._td_cap:
-          return int(100 * self._td_eng / self._td_cap)
+            return int(100 * self._td_eng / self._td_cap)
         return self._get_sp_data('percentage')
 
     def charging(self) -> bool:
@@ -124,12 +128,12 @@ class Battery:
         """Status da bateria: Charging, Discharging, Unknown, ..."""
         value = self._get_sp_data('status')
         value = to_linux_str(value)
-        if value == 'Full':
-          self._td_eng_lock.acquire()
-          self._td_eng = self._td_cap
-          self._td_eng_lock.release()
+        if self._td_up and value == 'Full':
+            self._td_eng_lock.acquire()
+            self._td_eng = self._td_cap
+            self._td_eng_lock.release()
         return value
-  
+
     def _cap_thread(self, cap: float):
         self._td_eng_lock.acquire()
         self._td_eng = self.percent() * cap / 100
@@ -139,32 +143,35 @@ class Battery:
 
         i = 0.0
         while self._td_up:
-          i = time.perf_counter()
-          cur = self.current_now()
-          self._td_eng_lock.acquire()
-          i = time.perf_counter() - i
-          self._td_eng += cur*(6+i)/3600
-          self._td_eng_lock.release()
-          time.sleep(DELAY_CHARGING)
-        self._td_up = False
+            i = time.perf_counter()
+            cur = self.current_now()
+            self._td_eng_lock.acquire()
+            i = time.perf_counter() - i
+
+            # mA*s -> mA*h: s/3600
+            self._td_eng += cur*(DELAY_CHARGING+i)/3600
+            self._td_eng_lock.release()
+
+            time.sleep(DELAY_CHARGING)
 
     def start_emulating_cap(self, cap: float):
-      if self._td_up:
-        return
-      self._td_eng_lock = threading.Lock()
-      self._td = threading.Thread(target = self._cap_thread, args=(cap,))
-      self._td.start()
+        if self._td_up:
+            return
+        self._td = threading.Thread(target=self._cap_thread, args=(cap,))
+        self._td.start()
 
     def stop_emulating_cap(self):
-      if self._td_up:
-        self._td_up = False
-        self._td.join()
+        if self._td_up:
+            self._td_up = False
+            self._td.join()
 
 
 if __name__ == '__main__':
     battery = Battery()
     battery.start_emulating_cap(2.0)
     time.sleep(7)
-    print('%0.2f' % (battery.energy_now()))
+    eng = battery.energy_now()
+    assert isinstance(eng, float)
+    print('%0.2f' % (eng))
     battery.stop_emulating_cap()
     print('End')
