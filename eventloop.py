@@ -13,26 +13,21 @@ from events import *
 
 cfg = Configuration(notify.send_toast)
 cfg.batt = driver.Battery()
+cfg.batt.start_emulating_cap(cfg.data["capacity"])
 install_config(cfg)
 
-def tweaks():
+def batt_refresh():
   batt = cfg.batt
   bd = {}
   bd["percent"] = batt.percent()
   bd["status"] = batt.status()
+  bd["energy"] = batt.energy_now()
+  bd["capacity"] = batt.capacity()
   bd["current"] = batt.current_now()
   bd["temp"] = batt.temp()
   bd["voltage"] = batt.voltage()
   bd["technology"] = batt.technology()
   bd["health"] = batt.health()
-
-  cap = cfg.data["capacity"]
-  if cap:
-    if cfg.charge is None or bd["status"] == 'Full':
-      cfg.charge = bd["percent"]*cap / 100
-    else:
-      cfg.charge += bd["current"]*cfg.xch
-    bd["charge"] = cfg.charge
 
   # TODO: tweak battery data here
   bd["percent"] = cfg.fix_percent(bd)
@@ -91,7 +86,7 @@ def iterate():
   cfg.tnow = time.localtime()
 
   cfg.o_btweaks = cfg.btweaks
-  cfg.btweaks = tweaks()
+  cfg.btweaks = batt_refresh()
 
   status_refresh = False
   if cfg.o_btweaks:
@@ -110,15 +105,21 @@ def iterate():
   else:
     time.sleep(DELAY_CHARGING)
 
+def cleanup():
+  fcache = sys.stderr
+  cfg.batt.stop_emulating_cap()
+  sys.stdout = sys.o_stdout
+  sys.stderr = sys.o_stderr
+  fcache.close()
+
 def handle_sigterm(sig, frame):
   notify.status_remove()
   notify.send_toast("encerrado")
   try:
     os.remove(FPID)
-  except FileNotExistsError:
+  except FileNotFoundError:
     pass
-  fcache = sys.stderr
-  sys.stdout = sys.o_stdout
+    sys.stderr = sys.o_stderr
   sys.stderr = sys.o_stderr
-  fcache.close()
+  cleanup()
   exit(0)

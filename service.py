@@ -33,17 +33,16 @@ if __name__ == '__main__':
       with open(FPID, 'r') as file:
         if int(file.read()) != APP_PID:
           ok = not ok
-    except FileNotExistsError:
+    except FileNotFoundError:
       break
   
   if ok:
     try:
       os.remove(FPID)
-    except FileNotExistsError:
+    except FileNotFoundError:
       pass
     main.handle_sigterm(0, None)
-  sys.stdout = sys.o_stdout
-  sys.stderr = sys.o_stderr
-  fcache.close()
+
+  main.cleanup()
 
 # by cleds.upper

@@ -119,18 +119,13 @@ class Configuration():
       p = btweaks['percent']
 
       if self.data['percent']['fix']:
-        lmin = self.data['percent']['empty']
-        lmax = self.data['percent']['full']
-        if lmin or lmax != 100:
+        if btweaks['capacity']:
+          p = btweaks['energy']/btweaks['capacity']
+        else:
+          lmin = self.data['percent']['empty']
+          lmax = self.data['percent']['full']
           p = (p-lmin)/(lmax-lmin)
-          p = int(p*100)
-        elif self.charge is not None:
-          p = self.charge / self.data['capacity']
-          p = int(p*100)
-        if p < 0:
-          p = 0
-        elif p > 100:
-          p = 100
+        p = int(p*100)
   
       return p
 

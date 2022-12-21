@@ -7,9 +7,10 @@ import os
 import shlex
 import subprocess
 import time
+import threading
 from typing import Optional
 
-from config.constants import SUBPROCESS_TIMEOUT, BATTERY_DIRPATH, DELAY_CHARGING
+from config.constants import SUBPROCESS_TIMEOUT, BATTERY_DIRPATH, DELAY_CHARGING, XCH_AWAKE
 
 def to_linux_str(termux_str: str) -> str:
     return termux_str[0] + termux_str[1:].lower().replace('_', ' ')
@@ -43,6 +44,11 @@ class Battery:
             'current': 0.0,
             'plugged': 'UNPLUGGED'
         }
+        self._td_up = False
+        self._td_cap = None
+        self._td_eng = None
+        self._td_eng_lock = None
+        self._td = None
         self.check_call()
 
     def check_call(self):
@@ -73,6 +79,8 @@ class Battery:
 
     def percent(self) -> int:
         """Nível de carga da bateria em percentual"""
+        if self._td_cap:
+          return int(100 * self._td_eng / self._td_cap)
         return self._get_sp_data('percentage')
 
     def charging(self) -> bool:
@@ -81,7 +89,7 @@ class Battery:
 
     def capacity(self) -> Optional[float]:
         """Retorna a capacidade estimada da bateria em Watts ou Amperes"""
-        return None
+        return self._td_cap
 
     def capacity_design(self) -> Optional[float]:
         """Retorna a capacidade típica da bateria em Watts ou Amperes"""
@@ -89,7 +97,7 @@ class Battery:
 
     def energy_now(self) -> Optional[float]:
         """Retorna o nível de carga da bateria em Watts ou Amperes"""
-        return None
+        return self._td_eng
 
     def current_now(self) -> Optional[float]:
         """Retorna a velocidade da (des)carga em Watts ou Amperes"""
@@ -115,17 +123,48 @@ class Battery:
     def status(self) -> str:
         """Status da bateria: Charging, Discharging, Unknown, ..."""
         value = self._get_sp_data('status')
-        return to_linux_str(value)
+        value = to_linux_str(value)
+        if value == 'Full':
+          self._td_eng_lock.acquire()
+          self._td_eng = self._td_cap
+          self._td_eng_lock.release()
+        return value
+  
+    def _cap_thread(self, cap: float):
+        self._td_eng_lock.acquire()
+        self._td_eng = self.percent() * cap / 100
+        self._td_cap = cap
+        self._td_eng_lock.release()
+        self._td_up = True
+
+        i = 0.0
+        while self._td_up:
+          i = time.perf_counter()
+          cur = self.current_now()
+          self._td_eng_lock.acquire()
+          i = time.perf_counter() - i
+          self._td_eng += cur*(6+i)/3600
+          self._td_eng_lock.release()
+          time.sleep(DELAY_CHARGING)
+        self._td_up = False
+
+    def start_emulating_cap(self, cap: float):
+      if self._td_up:
+        return
+      self._td_eng_lock = threading.Lock()
+      self._td = threading.Thread(target = self._cap_thread, args=(cap,))
+      self._td.start()
+
+    def stop_emulating_cap(self):
+      if self._td_up:
+        self._td_up = False
+        self._td.join()
+
 
 if __name__ == '__main__':
     battery = Battery()
-    technology = battery.technology()
-    level = battery.percent()
-    health = battery.health()
-    if technology is not None:
-        print('Battery (%s)' % (technology))
-    else:
-        print('Battery')
-    print('Level: %d %%' % (level))
-    if health:
-        print('Health: ' + health)
+    battery.start_emulating_cap(2.0)
+    time.sleep(7)
+    print('%0.2f' % (battery.energy_now()))
+    battery.stop_emulating_cap()
+    print('End')

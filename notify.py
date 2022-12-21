@@ -31,6 +31,8 @@ def termux_api_call(
   as_error = False,
   as_fatal = False
 ):
+  global tcount
+
   pars = ['--help']
   if as_status:
     pars = [
@@ -64,12 +66,10 @@ def termux_api_call(
       )
   except:
     tcount -= 1
+  finally:
     if tcount < 0:
-      status_remove()
       raise RuntimeError('Termux:API commands are hanging frequently!')
-
   if as_fatal:
-    status_remove()
     raise RuntimeError('FATAL: %s' % (message))
 
 
@@ -88,8 +88,8 @@ def send_status(
   message = '🔋 %d %% (%0.2f A) | 🌡 %0.1f °C' % (btweaks['percent'], btweaks['current'], btweaks['temp'])
   if btweaks['voltage'] is not None:
     message += ' | ⚡ %0.2f V' % (btweaks['voltage'])
-  if btweaks['charge'] is not None:
-    message += ' | %0.2f Ah' % (btweaks['charge'])
+  if btweaks['energy'] is not None:
+    message += ' | %0.2f Ah' % (btweaks['energy'])
   termux_api_call(message, as_status = True)
 
 
