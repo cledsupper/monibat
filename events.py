@@ -1,16 +1,14 @@
 # Utilizado pelos módulos:
 # eventloop
 
-from config.tweaker import Configuration, DELAY_CHARGING, DELAY_DISCHARGING
+from config.tweaker import *
+import driver
 import notify
 
-cfg: Configuration = None
-
-
-def install_config(m_cfg: Configuration):
-    global cfg
-    cfg = m_cfg
-    cfg.reset_alarms()
+cfg: Configuration = Configuration(notify.send_toast)
+cfg.batt = driver.Battery()
+cfg.batt.start_emulating_cap(cfg.data["capacity"])
+cfg.delay = DELAY_CHARGING if cfg.batt.charging() else DELAY_DISCHARGING
 
 
 def on_percent_increase(delta: int):
@@ -107,7 +105,8 @@ def on_temp_decrease(delta: int):
 def on_status_change(from_status: str):
     if cfg.btweaks['status'] == 'Charging':
         cfg.delay = DELAY_CHARGING
-        notify.send_toast('O conector foi conectado 🔌🔋')
+        if from_status == 'Not charging' or from_status == 'Full':
+            notify.send_toast('O conector foi conectado 🔌🔋')
     else:
         cfg.delay = DELAY_DISCHARGING
         if cfg.btweaks['status'] == 'Discharging':

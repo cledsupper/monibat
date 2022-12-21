@@ -83,7 +83,7 @@ class Battery:
 
     def percent(self) -> int:
         """Nível de carga da bateria em percentual"""
-        if self._td_cap:
+        if self._td_up:
             return int(100 * self._td_eng / self._td_cap)
         return self._get_sp_data('percentage')
 

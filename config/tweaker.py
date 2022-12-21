@@ -2,7 +2,7 @@
 # -> eventloop, events
 
 import json
-import time
+from typing import Optional
 
 from .constants import *
 
@@ -12,6 +12,12 @@ class Configuration():
         self.data = DEFAULT_SETTINGS
         self.btweaks = {}
         self.delay = DELAY_CHARGING
+        self.batt = None
+        self.o_tnow = None
+        self.tnow = None
+        self.btweaks = None
+        self.o_btweaks = None
+
         self._updated_at = 0
         self._sender = toast_cb
         self.update()

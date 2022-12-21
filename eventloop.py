@@ -4,17 +4,7 @@
 import sys
 import time
 
-import driver
-
-
-from config.tweaker import Configuration, FPID, DELAY_CHARGING, DELAY_DISCHARGING, os
-
 from events import *
-
-cfg = Configuration(notify.send_toast)
-cfg.batt = driver.Battery()
-cfg.batt.start_emulating_cap(cfg.data["capacity"])
-install_config(cfg)
 
 
 def batt_refresh():
@@ -35,14 +25,6 @@ def batt_refresh():
     bd["status"] = cfg.fix_status(bd)
 
     return bd
-
-
-cfg.o_tnow = None
-cfg.tnow = None
-cfg.btweaks = None
-cfg.o_btweaks = None
-
-cfg.delay = DELAY_CHARGING if cfg.batt.charging() else DELAY_DISCHARGING
 
 
 def run_events():
