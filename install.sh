@@ -1,0 +1,18 @@
+#!/data/data/com.termux/files/usr/bin/sh
+
+TARGET="$PREFIX/lib/MoniBat"
+mkdir -p "$TARGET/config"
+
+cp config/constants.py "$TARGET/config/"
+cp config/tweaker.py "$TARGET/config/"
+cp driver.py "$TARGET/"
+cp events.py "$TARGET/"
+cp notify.py "$TARGET/"
+cp eventloop.py "$TARGET/"
+cp service.py "$TARGET/"
+
+if [ ! -r "$HOME/.config/MoniBat/config.json" ]; then
+  mkdir -p "$HOME/.config/MoniBat"
+  cp samples/config.json "$HOME/.config/MoniBat/"
+  echo "Defina a capacidade (em Ampère-hora/Ah) no arquivo: $HOME/.config/MoniBat/config.json"
+ fi
