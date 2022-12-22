@@ -10,8 +10,8 @@ import time
 import threading
 from typing import Optional
 
-from config.constants import SUBPROCESS_TIMEOUT, BATTERY_DIRPATH, DELAY_CHARGING
-
+from config.constants import SUBPROCESS_TIMEOUT, BATTERY_DIRPATH, DELAY_CHARGING, TERMUX_ERRORS_LIMIT
+from data.messages import *
 
 def to_linux_str(termux_str: str) -> str:
     return termux_str[0] + termux_str[1:].lower().replace('_', ' ')
@@ -38,6 +38,7 @@ class Battery:
     def __init__(self, dirpath: str = BATTERY_DIRPATH, check_unit: bool = True):
         self._cmd = dirpath
         self._unit_checked = check_unit
+        self._sp_errlimit = TERMUX_ERRORS_LIMIT
         self._sp_last_call = 0
         self._sp_data = {
             'percentage': -1,
@@ -48,10 +49,10 @@ class Battery:
             'plugged': 'UNPLUGGED'
         }
         self._td_up = False
-        self._td_cap: Optional[float] = None
-        self._td_eng: Optional[float] = None
+        self._td_cap = None
+        self._td_eng = None
         self._td_eng_lock = threading.Lock()
-        self._td: Optional[threading.Thread] = None
+        self._td = None
         self.check_call()
 
     def check_call(self):
@@ -62,11 +63,22 @@ class Battery:
             return
         self._sp_last_call = tnow
 
-        proc = subprocess.run(
-            shlex.split(self._cmd),
-            capture_output=True,
-            check=True
-        )
+        while True:
+            try:
+                proc = subprocess.run(
+                    shlex.split(self._cmd),
+                    capture_output=True,
+                    check=True,
+                    timeout=SUBPROCESS_TIMEOUT
+                )
+                self._sp_errlimit = TERMUX_ERRORS_LIMIT
+                break
+            except subprocess.TimeoutExpired:
+                self._sp_errlimit -= 1
+            finally:
+                if self._sp_errlimit < 0:
+                    raise RuntimeError(TERMUX_ERRORS_LIMIT_REACH)
+        
         text = proc.stdout
         self._sp_data = json.loads(text)
 
@@ -136,7 +148,7 @@ class Battery:
 
     def _cap_thread(self, cap: float):
         self._td_eng_lock.acquire()
-        self._td_eng = self.percent() * cap / 100
+        self._td_eng = 0.5 * cap
         self._td_cap = cap
         self._td_eng_lock.release()
         self._td_up = True
@@ -144,7 +156,11 @@ class Battery:
         i = 0.0
         while self._td_up:
             i = time.perf_counter()
-            cur = self.current_now()
+            try:
+                cur = self.current_now()
+            except RuntimeError:
+                self._td_up = False
+                break
             self._td_eng_lock.acquire()
             i = time.perf_counter() - i
 

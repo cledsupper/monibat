@@ -28,7 +28,7 @@ FPID = os.path.join(CACHE, 'instance.pid')
 # Comando para obter o JSON com o estado da bateria
 BATTERY_DIRPATH = 'termux-battery-status'
 
-SUBPROCESS_TIMEOUT=7
+SUBPROCESS_TIMEOUT=60
 
 DELAY_CHARGING = 6
 DELAY_DISCHARGING = 60

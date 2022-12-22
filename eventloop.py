@@ -4,6 +4,7 @@
 import sys
 import time
 
+from data.messages import *
 from events import *
 
 
@@ -66,10 +67,10 @@ def run_events():
         on_status_change(o_btweaks['status'])
         result = True
 
-    o_stnow = time.mktime(cfg.o_tnow)
-    stnow = time.mktime(cfg.tnow)
-    if (stnow - o_stnow) >= cfg.delay:
-        result = True
+    #o_stnow = time.mktime(cfg.o_tnow)
+    #stnow = time.mktime(cfg.tnow)
+    #if (stnow - o_stnow) >= cfg.delay:
+        #result = True
 
     return result
 
@@ -79,6 +80,9 @@ def iterate():
 
     cfg.o_btweaks = cfg.btweaks
     cfg.btweaks = batt_refresh()
+    if cfg.data["capacity"] and not cfg.batt._td_up:
+        notify.send_message(TERMUX_ERRORS_LIMIT_REACH)
+        raise RuntimeError(TERMUX_ERRORS_LIMIT_REACH)
 
     status_refresh = False
     if cfg.o_btweaks:
@@ -88,7 +92,7 @@ def iterate():
 
     if status_refresh:
         cfg.o_tnow = cfg.tnow
-        if cfg.btweaks["status"] != "Not charging":
+        if not notify.status_shown or cfg.btweaks["status"] != "Not charging":
             notify.send_status(cfg.btweaks)
         cfg.update()
 

@@ -5,6 +5,7 @@ import subprocess
 from typing import Optional
 
 from config.constants import APP_NAME, APP_PID, APP_PY, SUBPROCESS_TIMEOUT, TERMUX_ERRORS_LIMIT
+from data.messages import *
 
 subprocess.run(
     ['termux-toast', '-h'],
@@ -20,7 +21,8 @@ subprocess.run(
     timeout=SUBPROCESS_TIMEOUT
 )
 
-tcount = TERMUX_ERRORS_LIMIT
+sp_errlimit = TERMUX_ERRORS_LIMIT
+status_shown = False
 
 def termux_api_call(
   message: str,
@@ -31,7 +33,7 @@ def termux_api_call(
   as_error = False,
   as_fatal = False
 ):
-  global tcount
+  global sp_errlimit
 
   pars = ['--help']
   if as_status:
@@ -64,11 +66,12 @@ def termux_api_call(
         ['termux-toast', '-g', 'top', '%s: %s' % (APP_NAME, message)],
         timeout = SUBPROCESS_TIMEOUT
       )
+      sp_errlimit = TERMUX_ERRORS_LIMIT
   except:
-    tcount -= 1
+    sp_errlimit -= 1
   finally:
-    if tcount < 0:
-      raise RuntimeError('Termux:API commands are hanging frequently!')
+    if sp_errlimit < 0:
+      raise RuntimeError(messages.TERMUX_ERRORS_LIMIT_REACH)
   if as_fatal:
     raise RuntimeError('FATAL: %s' % (message))
 
@@ -85,12 +88,15 @@ def send_status(
   btweaks: dict,
   remaining_time: Optional[int] = None
 ):
+  global status_shown
   message = '🔋 %d %% (%0.2f A) | 🌡 %0.1f °C' % (btweaks['percent'], btweaks['current'], btweaks['temp'])
   if btweaks['voltage'] is not None:
     message += ' | ⚡ %0.2f V' % (btweaks['voltage'])
   if btweaks['energy'] is not None:
     message += ' | %0.2f Ah' % (btweaks['energy'])
   termux_api_call(message, as_status = True)
+  if not status_shown:
+    status_shown = True
 
 
 def send_toast(message: str):
