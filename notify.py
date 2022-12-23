@@ -4,8 +4,7 @@
 import subprocess
 from typing import Optional
 
-from config.constants import APP_NAME, APP_PID, APP_PY, SUBPROCESS_TIMEOUT, TERMUX_ERRORS_LIMIT
-from data.messages import *
+from config.constants import APP_NAME, APP_PID, APP_PY, SUBPROCESS_TIMEOUT
 
 subprocess.run(
     ['termux-toast', '-h'],
@@ -21,7 +20,6 @@ subprocess.run(
     timeout=SUBPROCESS_TIMEOUT
 )
 
-sp_errlimit = TERMUX_ERRORS_LIMIT
 status_shown = False
 
 def termux_api_call(
@@ -33,8 +31,6 @@ def termux_api_call(
   as_error = False,
   as_fatal = False
 ):
-  global sp_errlimit
-
   pars = ['--help']
   if as_status:
     pars = [
@@ -66,12 +62,8 @@ def termux_api_call(
         ['termux-toast', '-g', 'top', '%s: %s' % (APP_NAME, message)],
         timeout = SUBPROCESS_TIMEOUT
       )
-      sp_errlimit = TERMUX_ERRORS_LIMIT
   except:
-    sp_errlimit -= 1
-  finally:
-    if sp_errlimit < 0:
-      raise RuntimeError(messages.TERMUX_ERRORS_LIMIT_REACH)
+    pass
   if as_fatal:
     raise RuntimeError('FATAL: %s' % (message))
 
