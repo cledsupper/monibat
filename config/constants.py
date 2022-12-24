@@ -51,6 +51,7 @@ BATTERY_DIRPATH = 'termux-battery-status'
 
 SUBPROCESS_TIMEOUT = 60
 
+DRIVER_SLEEP = 1
 DELAY_CHARGING = 6
 DELAY_DISCHARGING = 60
 
@@ -58,13 +59,22 @@ TERMUX_ERRORS_LIMIT = 15
 
 LEVEL_EMPTY = 0
 LEVEL_FULL = 100
-LEVEL_LOW = 20
+LEVEL_LOW = 15
 LEVEL_HIGH = 80
 
+LEVEL = {
+    "Critical": "vazia",
+    "Low": "fraca",
+    "Normal": "normal",
+    "High": "carregada",
+    "Full": "completa"
+}
+
 # É bom que seja bateria de lítio
-VOLTAGE_TYP = 3.7
+VOLTAGE_TYP = 3.85
 VOLTAGE_EMPTY = 3.4
-VOLTAGE_FULL = 4.2
+VOLTAGE_LOW = 3.7
+VOLTAGE_FULL = 4.4
 
 TEMP_MIN = 5.0
 TEMP_HOT = 40.0
@@ -82,7 +92,7 @@ DEFAULT_SETTINGS = {
     "voltage": {
         "empty": VOLTAGE_EMPTY,
         "full": VOLTAGE_FULL,
-        "low": VOLTAGE_TYP,
+        "low": VOLTAGE_LOW,
         "high": VOLTAGE_FULL,
     },
     "temp": {

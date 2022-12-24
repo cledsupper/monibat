@@ -26,7 +26,7 @@
 import subprocess
 from typing import Optional
 
-from config.constants import APP_NAME, APP_PID, APP_PY, SUBPROCESS_TIMEOUT
+from config.constants import APP_NAME, APP_PID, APP_PY, LEVEL, SUBPROCESS_TIMEOUT
 
 subprocess.run(
     ['termux-toast', '-h'],
@@ -111,7 +111,16 @@ def send_status(
         message += ' | ⚡ %0.2f V' % (btweaks['voltage'])
     if btweaks['energy'] is not None:
         message += ' | %0.2f Ah' % (btweaks['energy'])
-    termux_api_call(message, as_status=True)
+    icon = 'battery_std'
+    if btweaks['level'] == 'Low' or btweaks['level'] == 'Critical':
+        icon = 'battery_alert'
+    termux_api_call(
+        message,
+        icon=icon,
+        title=LEVEL[btweaks['level']],
+        as_status=True
+    )
+
     if not status_shown:
         status_shown = True
 

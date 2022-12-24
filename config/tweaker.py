@@ -38,6 +38,8 @@ class Configuration():
         self.tnow = None
         self.btweaks = None
         self.o_btweaks = None
+        self.calibrate = False
+        self.calibrate_aux = 0.0
 
         self._updated_at = 0
         self._sender = toast_cb
@@ -62,6 +64,20 @@ class Configuration():
                 self._sender('configuração atualizada')
             else:
                 self._sender('erro de config., cód.: %d' % (errcode))
+
+    def save(self):
+        err = None
+        try:
+            with open(FCONFIG, 'w') as file:
+                file.write(json.dumps(self.data))
+        except Exception as e:
+            err = e
+        if err:
+            logging.exception('Configuration.save()')
+            self._sender('falha ao salvar configuração!')
+        else:
+            self._updated_at = os.path.getmtime(FCONFIG)
+        
 
     def valid_settings(self, settings):
         """Válida os parâmetros lidos antes de aplicar as configurações"""
@@ -108,11 +124,10 @@ class Configuration():
             full = voltage.get('full', VOLTAGE_FULL)
             assert empty < full
 
-            low = voltage.get('low', VOLTAGE_EMPTY+0.2)
-            high = voltage.get('high', VOLTAGE_FULL-0.1)
+            low = voltage.get('low', VOLTAGE_LOW)
+            high = voltage.get('high', VOLTAGE_FULL)
             assert low < high
             assert low > VOLTAGE_EMPTY
-            assert high < VOLTAGE_FULL
 
             self.data['voltage'] = {
                 'empty': empty,
@@ -148,13 +163,15 @@ class Configuration():
         p = btweaks['percent']
 
         if self.data['percent']['fix']:
-            if btweaks['capacity']:
-                p = btweaks['energy']/btweaks['capacity']
-            else:
-                lmin = self.data['percent']['empty']
-                lmax = self.data['percent']['full']
-                p = (p-lmin)/(lmax-lmin)
+            lmin = self.data['percent']['empty']
+            lmax = self.data['percent']['full']
+            p = (p-lmin)/(lmax-lmin)
             p = int(p*100)
+
+        if p > 100:
+            p = 100
+        elif p < 0:
+            p = 0
 
         return p
 

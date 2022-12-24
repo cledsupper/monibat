@@ -1,21 +1,21 @@
 {
-  "capacity": 0.0,
+  "capacity": 5.0,
   "percent": {
     "empty": 0,
     "full": 100,
     "fix": true,
-    "low": 25,
-    "high": 75
+    "low": 15,
+    "high": 80
   },
   "voltage": {
     "empty": 3.4,
-    "full": 4.2,
+    "full": 4.4,
     "low": 3.7,
-    "high": 4.0
+    "high": 4.2
   },
   "temp": {
     "min": 5.0,
-    "high": 40.0,
-    "max": 55
+    "hot": 40.0,
+    "max": 55.0
   }
 }

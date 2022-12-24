@@ -45,6 +45,48 @@ def batt_refresh():
     # TODO: tweak battery data here
     bd["percent"] = cfg.fix_percent(bd)
     bd["status"] = cfg.fix_status(bd)
+    bd["level"] = 'Normal'
+    if bd["percent"] == 100:
+        bd["level"] = 'Full'
+    elif bd["percent"] >= cfg.data["percent"]["high"]:
+        bd["level"] = 'High'
+    elif bd["percent"] < cfg.data["percent"]["low"]:
+        bd["level"] = 'Low'
+    elif bd["percent"] < 5:
+        bd["level"] = 'Critical'
+
+    if bd["voltage"]:
+        if not cfg.calibrate and bd["voltage"] < cfg.data["voltage"]["low"]:
+            v = bd["voltage"]
+            lv = cfg.data["voltage"]["low"]
+            if v >= lv-0.02:
+                cfg.calibrate = True
+                cfg.calibrate_aux = bd["energy"]
+                batt.stop_emulating_cap()
+                batt.start_emulating_cap(
+                    cfg.data["capacity"],
+                    perc_start = cfg.data["percent"]["low"]
+                )
+                notify.send_message(
+                    'carregue a bateria completamente para concluir',
+                    title='calibração da bateria iniciada',
+                    icon='battery_alert'
+                )
+    if cfg.calibrate and bd["status"] == 'Full':
+        cfg.calibrate = False
+        cfg.calibrate_aux = cfg.o_btweaks["energy"] - cfg.calibrate_aux
+        cfg.calibrate_aux /= float(100 - cfg.data["percent"]["low"])/100.0
+        cfg.data["capacity"] = cfg.calibrate_aux
+        cfg.save()
+        batt.stop_emulating_cap()
+        batt.start_emulating_cap(
+            cfg.data["capacity"],
+            perc_start=100
+        )
+        notify.send_message(
+            'calibração concluída para: %0.2f Ah' % (cfg.calibrate_aux),
+            title='bateria calibrada! ✅'
+        )
 
     return bd
 

@@ -30,7 +30,7 @@ import time
 import threading
 from typing import Optional
 
-from config.constants import SUBPROCESS_TIMEOUT, BATTERY_DIRPATH, DELAY_CHARGING
+from config.constants import BATTERY_DIRPATH, DRIVER_SLEEP, LEVEL_LOW, SUBPROCESS_TIMEOUT
 
 
 def to_linux_str(termux_str: str) -> str:
@@ -51,6 +51,17 @@ if tmp:
     else:
         BATTERY_DIRPATH = tmp
 
+# rendiix fork is an ADB fix for Galaxy devices which allows getting voltage data
+HAVE_ADB = False
+try:
+    subprocess.run(
+        shlex.split('adb wait-for-device'),
+        check=True,
+        timeout=SUBPROCESS_TIMEOUT
+    )
+    HAVE_ADB = True
+except:
+    pass
 
 class Battery:
     """Classe Battery para acessar informações da bateria"""
@@ -69,16 +80,17 @@ class Battery:
         }
         self._td_up = False
         self._td_cap = None
+        self._td_perc_start = float(LEVEL_LOW)
         self._td_eng = None
         self._td_eng_lock = threading.Lock()
         self._td = None
         self.check_call()
 
     def check_call(self):
-        """Pula múltiplas chamadas à Termux:API até um tempo específico: DELAY_CHARGING."""
+        """Pula múltiplas chamadas à Termux:API até um tempo específico: DRIVER_SLEEP."""
         tnow = time.time()
         td = tnow - self._sp_last_call
-        if td < DELAY_CHARGING:
+        if td < DRIVER_SLEEP:
             return
         self._sp_last_call = tnow
 
@@ -140,7 +152,20 @@ class Battery:
 
     def voltage(self) -> Optional[float]:
         """Tensão da bateria (V)"""
-        return None
+        value = None
+        if HAVE_ADB:
+            try:
+                proc = subprocess.run(
+                    shlex.split('adb shell cat /sys/class/power_supply/battery/voltage_avg'),
+                    capture_output=True,
+                    check=True,
+                    timeout=DRIVER_SLEEP
+                )
+                value = int(proc.stdout.decode().strip())
+                value = float(value)/1000000.0
+            except:
+                pass
+        return value
 
     def health(self) -> Optional[str]:
         """Saúde da bateria"""
@@ -163,7 +188,7 @@ class Battery:
 
     def _cap_thread(self, cap: float):
         self._td_eng_lock.acquire()
-        self._td_eng = 0.2 * cap
+        self._td_eng = self._td_perc_start * cap / 100
         self._td_cap = cap
         self._td_eng_lock.release()
         self._td_up = True
@@ -176,14 +201,15 @@ class Battery:
             i = time.perf_counter() - i
 
             # mA*s -> mA*h: s/3600
-            self._td_eng += cur*(DELAY_CHARGING+i)/3600
+            self._td_eng += cur*(DRIVER_SLEEP+i)/3600
             self._td_eng_lock.release()
 
-            time.sleep(DELAY_CHARGING)
+            time.sleep(DRIVER_SLEEP)
 
-    def start_emulating_cap(self, cap: float):
+    def start_emulating_cap(self, cap: float, perc_start: int = LEVEL_LOW):
         if self._td_up:
             return
+        self._td_perc_start = float(perc_start)
         self._td = threading.Thread(target=self._cap_thread, args=(cap,))
         self._td.start()
 

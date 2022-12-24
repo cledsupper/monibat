@@ -28,7 +28,11 @@ import notify
 
 cfg: Configuration = Configuration(notify.send_toast)
 cfg.batt = driver.Battery()
-cfg.batt.start_emulating_cap(cfg.data["capacity"])
+if cfg.data["capacity"]:
+    cfg.batt.start_emulating_cap(
+        cfg.data["capacity"],
+        cfg.data["percent"]["low"]
+    )
 cfg.delay = DELAY_CHARGING if cfg.batt.charging() else DELAY_DISCHARGING
 
 
