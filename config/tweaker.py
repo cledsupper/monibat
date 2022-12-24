@@ -42,9 +42,10 @@ class Configuration():
         self.calibrate_aux = 0.0
 
         self._updated_at = 0
-        self._sender = toast_cb
+        self._sender = None
         self.update()
         self.reset_alarms()
+        self._sender = toast_cb
 
     def update(self):
         errcode = 0
@@ -176,13 +177,30 @@ class Configuration():
 
     def fix_status(self, btweaks: dict):
         capacity = self.data['capacity']
-        if capacity:
+        if capacity and btweaks['status'] != 'Full':
             if abs(btweaks['current']) < 0.01*capacity:
                 return 'Not charging'
         return btweaks['status']
 
     def infer_percent(self, driver):
-        return self.cfg.data['percent']['low']
+        v = driver.voltage()
+        if v:
+            status = driver.status()
+            if status == 'Discharging':
+                vhigh = self.data["voltage"]["high"]
+                vempty = self.data["voltage"]["empty"]
+                p = (v - vempty)/(vhigh - vempty)
+            else:
+                vfull = self.data["voltage"]["full"]
+                vlow = self.data["voltage"]["low"]
+                p = (v - vlow)/(vfull - vlow)
+            p = int(p*100)
+            if p > 100:
+                p = 100
+            elif p < 0:
+                p = 0
+            return p
+        return 100
 
     def reset_alarms(self):
         self.a_percent_high = False

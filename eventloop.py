@@ -87,6 +87,9 @@ def batt_refresh():
             'calibração concluída para: %0.2f Ah' % (cfg.calibrate_aux),
             title='bateria calibrada! ✅'
         )
+    elif bd["status"] == 'Full' and batt._td_up:
+        cfg.data['capacity'] = cfg.btweaks["capacity"]
+        cfg.save()
 
     return bd
 
@@ -104,7 +107,7 @@ def run_events():
             on_percent_decrease(dp)
         result = True
 
-    if btweaks['voltage'] is not None:
+    if btweaks['voltage'] and o_btweaks['voltage']:
         old = int(o_btweaks['voltage'] * 10)
         new = int(btweaks['voltage'] * 10)
         dv = old - new

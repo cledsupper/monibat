@@ -23,10 +23,11 @@
 # eventloop
 
 from config.tweaker import *
-import driver
 import notify
 
 cfg: Configuration = Configuration(notify.send_toast)
+notify.send_toast('Verificando depuração ADB (pode levar %d min)' % (SUBPROCESS_TIMEOUT/60))
+import driver
 cfg.batt = driver.Battery()
 if cfg.data["capacity"]:
     cfg.batt.start_emulating_cap(
@@ -134,10 +135,7 @@ def on_status_change(from_status: str):
             notify.send_toast('O conector foi conectado 🔌🔋')
     else:
         cfg.delay = DELAY_DISCHARGING
-        if cfg.btweaks['status'] == 'Full' and cfg.batt._td_up:
-            cfg.data['capacity'] = cfg.btweaks["capacity"]
-            cfg.save()
-        elif cfg.btweaks['status'] == 'Discharging':
+        if cfg.btweaks['status'] == 'Discharging':
             if from_status == 'Full' or from_status == 'Charging':
                 notify.send_toast('O conector foi desconectado 🔋')
     cfg.reset_alarms()
