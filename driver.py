@@ -63,6 +63,7 @@ try:
 except:
     pass
 
+
 class Battery:
     """Classe Battery para acessar informações da bateria"""
 
@@ -156,7 +157,9 @@ class Battery:
         if HAVE_ADB:
             try:
                 proc = subprocess.run(
-                    shlex.split('adb shell cat /sys/class/power_supply/battery/voltage_avg'),
+                    shlex.split(
+                        'adb shell cat /sys/class/power_supply/battery/voltage_avg'
+                    ),
                     capture_output=True,
                     check=True,
                     timeout=DRIVER_SLEEP
@@ -181,9 +184,12 @@ class Battery:
         value = self._get_sp_data('status')
         value = to_linux_str(value)
         if self._td_up and value == 'Full':
-            self._td_eng_lock.acquire()
-            self._td_eng = self._td_cap
-            self._td_eng_lock.release()
+            if self._td_eng > self._td_cap:
+                self._td_eng_lock.acquire()
+                self._td_eng = self._td_cap
+                self._td_eng_lock.release()
+            else:
+                self._td_cap = self._td_eng
         return value
 
     def _cap_thread(self, cap: float):

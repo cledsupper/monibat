@@ -31,7 +31,7 @@ cfg.batt = driver.Battery()
 if cfg.data["capacity"]:
     cfg.batt.start_emulating_cap(
         cfg.data["capacity"],
-        cfg.data["percent"]["low"]
+        cfg.infer_percent(cfg.batt)
     )
 cfg.delay = DELAY_CHARGING if cfg.batt.charging() else DELAY_DISCHARGING
 
@@ -134,7 +134,10 @@ def on_status_change(from_status: str):
             notify.send_toast('O conector foi conectado 🔌🔋')
     else:
         cfg.delay = DELAY_DISCHARGING
-        if cfg.btweaks['status'] == 'Discharging':
+        if cfg.btweaks['status'] == 'Full' and cfg.batt._td_up:
+            cfg.data['capacity'] = cfg.btweaks["capacity"]
+            cfg.save()
+        elif cfg.btweaks['status'] == 'Discharging':
             if from_status == 'Full' or from_status == 'Charging':
                 notify.send_toast('O conector foi desconectado 🔋')
     cfg.reset_alarms()

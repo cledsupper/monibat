@@ -77,7 +77,6 @@ class Configuration():
             self._sender('falha ao salvar configuração!')
         else:
             self._updated_at = os.path.getmtime(FCONFIG)
-        
 
     def valid_settings(self, settings):
         """Válida os parâmetros lidos antes de aplicar as configurações"""
@@ -181,6 +180,9 @@ class Configuration():
             if abs(btweaks['current']) < 0.01*capacity:
                 return 'Not charging'
         return btweaks['status']
+
+    def infer_percent(self, driver):
+        return self.cfg.data['percent']['low']
 
     def reset_alarms(self):
         self.a_percent_high = False
