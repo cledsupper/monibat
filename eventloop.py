@@ -61,12 +61,13 @@ def batt_refresh():
             lv = cfg.data["voltage"]["low"]
             if v >= lv-0.02:
                 cfg.calibrate = True
-                cfg.calibrate_aux = bd["energy"]
                 batt.stop_emulating_cap()
                 batt.start_emulating_cap(
                     cfg.data["capacity"],
                     perc_start = cfg.data["percent"]["low"]
                 )
+                cfg.calibrate_aux = cfg.data["percent"]["low"] * cfg.data["capacity"]
+                cfg.calibrate_aux /= 100
                 notify.send_message(
                     'carregue a bateria completamente para concluir',
                     title='calibração da bateria iniciada',
