@@ -89,8 +89,9 @@ def batt_refresh():
             title='bateria calibrada! ✅'
         )
     elif bd["status"] == 'Full' and batt._td_up:
-        cfg.data['capacity'] = cfg.btweaks["capacity"]
-        cfg.save()
+        if int(cfg.data["capacity"]*1000) != int(bd["capacity"]*1000):
+            cfg.data['capacity'] = bd["capacity"]
+            cfg.save()
 
     return bd
 

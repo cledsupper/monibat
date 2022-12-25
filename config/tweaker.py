@@ -177,9 +177,12 @@ class Configuration():
 
     def fix_status(self, btweaks: dict):
         capacity = self.data['capacity']
-        if capacity and btweaks['status'] != 'Full':
-            if abs(btweaks['current']) < 0.01*capacity:
-                return 'Not charging'
+        if capacity:
+            if btweaks['status'] == 'Full':
+                if btweaks['current'] >= 0.01*capacity:
+                    return 'Charging'
+            elif abs(btweaks['current']) < 0.01*capacity:
+                    return 'Not charging'
         return btweaks['status']
 
     def infer_percent(self, driver):
