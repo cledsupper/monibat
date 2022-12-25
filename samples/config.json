@@ -3,7 +3,7 @@
   "percent": {
     "empty": 0,
     "full": 100,
-    "fix": true,
+    "fix": false,
     "low": 15,
     "high": 80
   },
