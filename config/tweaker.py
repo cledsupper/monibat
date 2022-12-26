@@ -204,7 +204,7 @@ class Configuration():
             elif p < 0:
                 p = 0
             return p
-        return 100
+        return self.data["percent"]["low"]
 
     def reset_alarms(self):
         self.a_percent_high = False
