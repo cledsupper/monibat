@@ -1,6 +1,6 @@
 #!/data/data/com.termux/files/usr/bin/sh
 
-if [ "$(id -u)" = "0" ];
+if [ "$(id -u)" = "0" ]; then
   echo "NÃO EXECUTE COMO ROOT!"
   exit 1
 fi
