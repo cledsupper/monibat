@@ -168,7 +168,7 @@ def on_status_change(from_status: str):
             )
         elif cfg.batt._td_up:
             if int(cfg.data["capacity"]*1000) != int(cfg.btweaks["capacity"]*1000):
-                cfg.data['capacity'] = cfg.btweaks["capacity"]
+                cfg.data['capacity'] = cfg.btweaks["energy"]
                 cfg.save()
     else:
         cfg.delay = DELAY_DISCHARGING

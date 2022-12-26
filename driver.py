@@ -188,8 +188,6 @@ class Battery:
                 self._td_eng_lock.acquire()
                 self._td_eng = self._td_cap
                 self._td_eng_lock.release()
-            else:
-                self._td_cap = self._td_eng
         return value
 
     def _cap_thread(self, cap: float):
