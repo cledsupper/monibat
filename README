@@ -87,7 +87,7 @@ b) Modo automático com ADB:
 
 2. Inicie o MoniBat (~/.termux/boot/moni.sh) e reinicie através da notificação para o programa executar como serviço.
 
-3. Use o dispositivo até que apareça a notificação de "calibração iniciada".
+3. Carregue completamente e depois use o dispositivo até que apareça a notificação de "calibração iniciada".
 
 { nota
 Após isso, você pode desativar a depuração via WiFi no menu desenvolvedor caso deseje economizar recursos.
@@ -96,5 +96,9 @@ Após isso, você pode desativar a depuração via WiFi no menu desenvolvedor ca
 4. Carregue o dispositivo Android completamente. Aqui é importante evitar o uso do aparelho, pois grandes e rápidas variações da corrente durante a recarga vão aumentar a imprecisão do emulador, assim comprometendo o resultado.
 
 5. Após aparecer a notificação de calibração concluída, você pode reiniciar o MoniBat e matar o processo do ADB após um minuto do reinício do MoniBat (o tempo de tentativa do pareamento via WiFi).
+
+{ nota
+Como na calibração manual, pode ser necessário reconectar o carregador caso a bateria tenha terminado a carga antes do sistema Android mostrar 100 %.
+}
 
 6. Desconecte do carregador e aproveite um celular que não descarga sem você saber!
