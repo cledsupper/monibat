@@ -187,9 +187,11 @@ class Configuration():
         return btweaks['status']
 
     def infer_percent(self, driver):
+        status = driver.status()
         v = driver.voltage()
-        if v:
-            status = driver.status()
+        if status == 'Full':
+            return 100
+        elif v:
             if status == 'Discharging':
                 vhigh = self.data["voltage"]["high"]
                 vempty = self.data["voltage"]["empty"]

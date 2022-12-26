@@ -1,3 +1,2 @@
 Por favor, corrija o parâmetro "capacity" para a capacidade da sua bateria, ou então desative o cálculo da capacidade zerando o seguinte parâmetro no arquivo de configuração:
   ... "capacity": 0.0
-  ... "fix": false
