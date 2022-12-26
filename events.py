@@ -78,7 +78,24 @@ def on_voltage_increase(delta: int):
 
 
 def on_voltage_decrease(delta: int):
-    pass
+    if not cfg.calibrate and cfg.btweaks["voltage"] < cfg.data["voltage"]["low"]:
+        v = cfg.btweaks["voltage"]
+        lv = cfg.data["voltage"]["low"]
+        if v >= lv-0.02:
+            cfg.calibrate = True
+            cfg.batt.stop_emulating_cap()
+            cfg.batt.start_emulating_cap(
+                cfg.data["capacity"],
+                perc_start=cfg.data["percent"]["low"]
+            )
+            cfg.calibrate_aux = cfg.data["percent"]["low"] * \
+                cfg.data["capacity"]
+            cfg.calibrate_aux /= 100
+            notify.send_message(
+                'carregue a bateria completamente para concluir',
+                title='calibração da bateria iniciada',
+                icon='battery_alert'
+            )
 
 
 def on_temp_increase(delta: int):
@@ -133,6 +150,26 @@ def on_status_change(from_status: str):
         cfg.delay = DELAY_CHARGING
         if from_status == 'Not charging' or from_status == 'Full':
             notify.send_toast('O conector foi conectado 🔌🔋')
+    elif cfg.btweaks["status"] == 'Full':
+        if cfg.calibrate:
+            cfg.calibrate = False
+            cfg.calibrate_aux = cfg.o_btweaks["energy"] - cfg.calibrate_aux
+            cfg.calibrate_aux /= float(100 - cfg.data["percent"]["low"])/100.0
+            cfg.data["capacity"] = cfg.calibrate_aux
+            cfg.save()
+            cfg.batt.stop_emulating_cap()
+            cfg.batt.start_emulating_cap(
+                cfg.data["capacity"],
+                perc_start=100
+            )
+            notify.send_message(
+                'calibração concluída para: %0.2f Ah' % (cfg.calibrate_aux),
+                title='bateria calibrada! ✅'
+            )
+        elif cfg.batt._td_up:
+            if int(cfg.data["capacity"]*1000) != int(cfg.btweaks["capacity"]*1000):
+                cfg.data['capacity'] = cfg.btweaks["capacity"]
+                cfg.save()
     else:
         cfg.delay = DELAY_DISCHARGING
         if cfg.btweaks['status'] == 'Discharging':
