@@ -59,6 +59,7 @@ Pode ser necessário reconectar o seu carregador se a bateria parou de carregar 
 
 6. Compare a capacidade salva no arquivo de configuração (ex.: 3.3 = 3300 mAh) com a capacidade "design" multiplicada pelo percentual de carga baixo (ex.: 5000 * 25% = 1250 mAh), então use a seguinte fórmula para calcular a capacidade real (y):
   y = (cf - ci)/ipb
+
 { nota
  * cf: capacidade salva;
  * ci: capacidade vezes o percentual de carga baixo;
@@ -76,7 +77,7 @@ Portanto, defina a capacidade real, em Ah, no arquivo de configuração:
 
 b) Modo automático com ADB:
 
-1. Conecte o próprio ADB através da depuração por WiFi com a opção para parear por código:
+1. Conecte o próprio ADB através da depuração por WiFi com a opção para pareamento por código:
   $ adb pair IP:PORT
   [digite o código que aparece na tela do menu Desenvolvedor]
 
