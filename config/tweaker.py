@@ -23,6 +23,7 @@
 # -> eventloop, events
 
 import json
+import logging
 from typing import Optional
 
 from .constants import *
@@ -182,7 +183,7 @@ class Configuration():
                 if btweaks['current'] >= 0.01*capacity:
                     return 'Charging'
             elif abs(btweaks['current']) < 0.01*capacity:
-                    return 'Not charging'
+                return 'Not charging'
         return btweaks['status']
 
     def infer_percent(self, driver):

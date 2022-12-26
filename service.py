@@ -21,11 +21,10 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
 #  USA
 
-import logging
 import signal
 import sys
 
-from config.tweaker import os, APP_PID, CACHE, CONFIG, FCACHE, FPID
+from config.tweaker import logging, os, APP_PID, CACHE, CONFIG, FCACHE, FPID
 import eventloop as main
 
 if __name__ == '__main__':
