@@ -42,7 +42,6 @@ def batt_refresh():
     bd["technology"] = batt.technology()
     bd["health"] = batt.health()
 
-    # TODO: tweak battery data here
     bd["percent"] = cfg.fix_percent(bd)
     bd["status"] = cfg.fix_status(bd)
     bd["level"] = 'Normal'
@@ -74,7 +73,7 @@ def run_events():
     if btweaks['voltage'] and o_btweaks['voltage']:
         old = int(o_btweaks['voltage'] * 10)
         new = int(btweaks['voltage'] * 10)
-        dv = old - new
+        dv = new - old
         if dv != 0:
             if dv > 0:
                 on_voltage_increase(dv)
@@ -85,7 +84,7 @@ def run_events():
     if btweaks['temp'] is not None:
         old = int(o_btweaks['temp'] * 10)
         new = int(btweaks['temp'] * 10)
-        dt = old - new
+        dt = new - old
         if dt != 0:
             if dt > 0:
                 on_temp_increase(dt)
