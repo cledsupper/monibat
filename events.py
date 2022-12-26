@@ -170,6 +170,11 @@ def on_status_change(from_status: str):
             if int(cfg.data["capacity"]*1000) != int(cfg.btweaks["capacity"]*1000):
                 cfg.data['capacity'] = cfg.btweaks["energy"]
                 cfg.save()
+                cfg.batt.stop_emulating_cap()
+                cfg.batt.start_emulating_cap(
+                    cfg.data["capacity"],
+                    perc_start=100
+                )
     else:
         cfg.delay = DELAY_DISCHARGING
         if cfg.btweaks['status'] == 'Discharging':
