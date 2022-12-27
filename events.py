@@ -78,9 +78,9 @@ def on_voltage_increase(delta: int):
 
 
 def on_voltage_decrease(delta: int):
-    if not cfg.calibrate and cfg.btweaks["voltage"] < cfg.data["voltage"]["low"]:
-        v = cfg.btweaks["voltage"]
-        lv = cfg.data["voltage"]["low"]
+    v = cfg.btweaks["voltage"]
+    lv = cfg.data["voltage"]["low"]
+    if not cfg.calibrate and v < lv:
         if v >= lv-0.02:
             cfg.calibrate = True
             cfg.batt.stop_emulating_cap()
