@@ -71,7 +71,7 @@ class Configuration():
         err = None
         try:
             with open(FCONFIG, 'w') as file:
-                file.write(json.dumps(self.data))
+                file.write(json.dumps(self.data, indent=INDENTATION_DEFAULT))
         except Exception as e:
             err = e
         if err:
