@@ -26,13 +26,13 @@ a) Modo manual, sem depuração por ADB:
 
 2. No arquivo de configuração em .config/MoniBat, defina o percentual de carga fraca de acordo com as especificações da sua bateria -- você pode verificar essas informações através das bases de dados oriundas dos testes de (des)carga que vários cientistas fazem com baterias de lítio.
 
-    2.1. Se a tensão estiver entre 4,35 e 4,4 V, defina o percentual de carga baixo como 20 %:
+    2.1. Se a tensão estiver entre 4,35 e 4,4 V, defina o percentual de carga baixo como 15 %:
       | "percent": {
       | ...
       |    "low": 15,
       | ...
 
-    2.2. Se a tensão estiver entre 4,25 e 4,34 V, defina o percentual de carga baixo como 25 %:
+    2.2. Se a tensão estiver entre 4,25 e 4,34 V, defina o percentual de carga baixo como 20 %:
       | "percent": {
       | ...
       |    "low": 20,
