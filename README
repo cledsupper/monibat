@@ -29,19 +29,19 @@ a) Modo manual, sem depuração por ADB:
     2.1. Se a tensão estiver entre 4,35 e 4,4 V, defina o percentual de carga baixo como 20 %:
       | "percent": {
       | ...
-      |    "low": 20,
+      |    "low": 15,
       | ...
 
     2.2. Se a tensão estiver entre 4,25 e 4,34 V, defina o percentual de carga baixo como 25 %:
       | "percent": {
       | ...
-      |    "low": 25,
+      |    "low": 20,
       | ...
 
     2.3. Se o seu dispositivo Android é velho, possuindo uma bateria de lítio do início da década de 2010, é provável que a tensão máxima seja de 4,2 V, então, neste caso:
       | "percent": {
       | ...
-      |    "low": 35,
+      |    "low": 30,
 
 3. Também defina a capacidade da bateria para a capacidade "design" (ou de fábrica). Se a capacidade design é 5.000 mAh, divida-a por 1.000 (mil) para obter o valor em Ah, então escreva o número com um ponto em vez de vírgula (a parte fracionária é necessária mesmo que o número seja inteiro!):
       | "capacity": 5.0,
