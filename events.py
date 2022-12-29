@@ -167,14 +167,8 @@ def on_status_change(from_status: str):
                 title='bateria calibrada! ✅'
             )
         elif cfg.batt._td_up:
-            if int(cfg.data["capacity"]*1000) != int(cfg.btweaks["capacity"]*1000):
-                cfg.data['capacity'] = cfg.btweaks["energy"]
-                cfg.save()
-                cfg.batt.stop_emulating_cap()
-                cfg.batt.start_emulating_cap(
-                    cfg.data["capacity"],
-                    perc_start=100
-                )
+            if int(cfg.btweaks["capacity"]*1000) != int(cfg.btweaks["energy"]*1000):
+                cfg.batt.reset_cap()
     else:
         cfg.delay = DELAY_DISCHARGING
         if cfg.btweaks['status'] == 'Discharging':

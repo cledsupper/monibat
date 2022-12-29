@@ -124,7 +124,7 @@ class Battery:
     def percent(self) -> int:
         """Nível de carga da bateria em percentual"""
         if self._td_up:
-            return int(100 * self._td_eng / self._td_cap)
+            return 1+int(100 * self._td_eng / self._td_cap)
         return self._get_sp_data('percentage')
 
     def charging(self) -> bool:
@@ -183,11 +183,6 @@ class Battery:
         """Status da bateria: Charging, Discharging, Unknown, ..."""
         value = self._get_sp_data('status')
         value = to_linux_str(value)
-        if self._td_up and value == 'Full':
-            if self._td_eng > self._td_cap:
-                self._td_eng_lock.acquire()
-                self._td_eng = self._td_cap
-                self._td_eng_lock.release()
         return value
 
     def _cap_thread(self, cap: float):
@@ -216,6 +211,11 @@ class Battery:
         self._td_perc_start = float(perc_start)
         self._td = threading.Thread(target=self._cap_thread, args=(cap,))
         self._td.start()
+
+    def reset_cap(self):
+        self._td_eng_lock.acquire()
+        self._td_eng = self._td_cap
+        self._td_eng_lock.release()
 
     def stop_emulating_cap(self):
         if self._td_up:

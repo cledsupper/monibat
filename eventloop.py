@@ -109,9 +109,6 @@ def iterate():
 
     cfg.o_btweaks = cfg.btweaks
     cfg.btweaks = batt_refresh()
-    if cfg.data["capacity"] and not cfg.batt._td_up:
-        notify.send_message(TERMUX_ERRORS_LIMIT_REACH)
-        raise RuntimeError(TERMUX_ERRORS_LIMIT_REACH)
 
     status_refresh = False
     if cfg.o_btweaks:
