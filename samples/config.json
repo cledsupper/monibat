@@ -1,5 +1,6 @@
 {
-  "capacity": 5.0,
+  "capacity": 0.0,
+  "capacity_design": 5.0,
   "percent": {
     "empty": 0,
     "full": 100,
