@@ -44,7 +44,8 @@ a) Modo manual, sem depuração por ADB:
       |    "low": 30,
 
 3. Também defina a capacidade da bateria para a capacidade "design" (ou de fábrica). Se a capacidade design é 5.000 mAh, divida-a por 1.000 (mil) para obter o valor em Ah, então escreva o número com um ponto em vez de vírgula (a parte fracionária é necessária mesmo que o número seja inteiro!):
-      | "capacity": 5.0,
+      | "capacity": 0.0,
+      | "capacity_design": 5.0,
 
 { nota
 Nesse tipo de configuração, foi DISPENSÁVEL definir o parâmetro percent.fix. Esse parâmetro só deve ser usado em conjunto com percent.min e percent.max, caso o seu dispositivo não "calibre" a bateria ao entrar em sono profundo, ou durante a recarga. É o método mais fácil para corrigir o problema, que dispensa um contador de carga de bateria (o emulador do MoniBat).

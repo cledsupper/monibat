@@ -24,6 +24,8 @@
 
 
 import subprocess
+import calendar
+import time
 from typing import Optional
 
 from config.constants import APP_NAME, APP_PID, APP_PY, LEVEL, SUBPROCESS_TIMEOUT
@@ -102,22 +104,42 @@ def send_message(message: str, title='mensagem do serviço', icon='battery_std')
 
 def send_status(
     btweaks: dict,
-    remaining_time: Optional[int] = None
+    remaining_time: Optional[time.struct_time] = None
 ):
     global status_shown
-    message = '🔋 %d %% (%0.2f A) | 🌡 %0.1f °C' % (
-        btweaks['percent'], btweaks['current'], btweaks['temp'])
+    icon = 'battery_std'
+    if btweaks['status'] == 'Charging':
+        icon = 'battery_charging_full'
+        message = '%d %% (%0.2f A) | 🌡 %0.1f °C' % (
+            btweaks['percent'], btweaks['current'], btweaks['temp'])
+    else:
+        message = '%d %% | 🌡 %0.1f °C' % (
+            btweaks['percent'], btweaks['temp'])
+        if btweaks['level'] == 'Low' or btweaks['level'] == 'Critical':
+            icon = 'battery_alert'
+
     if btweaks['voltage'] is not None:
         message += ' | ⚡ %0.2f V' % (btweaks['voltage'])
-    if btweaks['energy'] is not None:
-        message += ' | %0.2f Ah' % (btweaks['energy'])
-    icon = 'battery_std'
-    if btweaks['level'] == 'Low' or btweaks['level'] == 'Critical':
-        icon = 'battery_alert'
+    if btweaks['scale'] is not None:
+        message += ' | 🩺 %0.2f' % (btweaks['scale'])
+
+    title = LEVEL[btweaks['level']]
+    if remaining_time:
+        t = remaining_time
+        st = calendar.timegm(t)
+        if st >= 86400:
+            title = '%d dia(s) e %d h restantes' % (t.tm_day, t.tm_hour)
+        elif st >= 3600:
+            title = '%d h e %d mins restantes' % (t.tm_hour, t.tm_min)
+        elif st >= 60:
+            title = '%d min e %d s restantes' % (t.tm_min, t.tm_sec)
+        else:
+            title = '%d seg(s) restante(s)' % (t.tm_sec)
+
     termux_api_call(
         message,
         icon=icon,
-        title=LEVEL[btweaks['level']],
+        title=title,
         as_status=True
     )
 

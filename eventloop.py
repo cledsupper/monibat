@@ -41,6 +41,11 @@ def batt_refresh():
     bd["voltage"] = batt.voltage()
     bd["technology"] = batt.technology()
     bd["health"] = batt.health()
+    
+    if cfg.data["capacity_design"]:
+        bd["scale"] = bd["capacity"] / cfg.data["capacity_design"]
+    else:
+        bd["scale"] = None
 
     bd["percent"] = cfg.fix_percent(bd)
     bd["status"] = cfg.fix_status(bd)
@@ -63,7 +68,7 @@ def run_events():
     o_btweaks = cfg.o_btweaks
 
     dp = btweaks['percent'] - o_btweaks['percent']
-    if dp != 0:
+    if dp:
         if dp > 0:
             on_percent_increase(dp)
         else:
@@ -74,7 +79,7 @@ def run_events():
         old = int(o_btweaks['voltage'] * 10)
         new = int(btweaks['voltage'] * 10)
         dv = new - old
-        if dv != 0:
+        if dv:
             if dv > 0:
                 on_voltage_increase(dv)
             else:
@@ -85,7 +90,7 @@ def run_events():
         old = int(o_btweaks['temp'] * 10)
         new = int(btweaks['temp'] * 10)
         dt = new - old
-        if dt != 0:
+        if dt:
             if dt > 0:
                 on_temp_increase(dt)
             else:
@@ -94,6 +99,8 @@ def run_events():
 
     if btweaks['status'] != o_btweaks['status']:
         on_status_change(o_btweaks['status'])
+        cfg.chg_perc = btweaks['percent']
+        cfg.chg_time = cfg.tnow
         result = True
 
     # o_stnow = time.mktime(cfg.o_tnow)
@@ -102,6 +109,25 @@ def run_events():
         # result = True
 
     return result
+
+
+def calc_remaining_time():
+    bd = cfg.btweaks
+    # | agora - antes |
+    pp = abs(bd['percent'] - cfg.chg_perc)
+    if pp:
+        stnow = time.mktime(cfg.tnow) # agora
+        stchg = time.mktime(cfg.chg_time) # antes
+        s = stnow - stchg # tempo dos N pontos percs.
+        t = 0
+        if bd['status'] != 'Charging':
+            # tempo para descarregar
+            t = bd['percent']*s/pp
+        else:
+            # tempo para carregar
+            t = (100-bd['percent'])*s/pp
+        return time.gmtime(int(t))
+    return None
 
 
 def iterate():
@@ -115,11 +141,14 @@ def iterate():
         status_refresh = run_events()
     else:
         status_refresh = True
+        cfg.chg_perc = cfg.btweaks['percent']
+        cfg.chg_time = cfg.tnow
 
     if status_refresh:
         cfg.o_tnow = cfg.tnow
         if not notify.status_shown or cfg.btweaks["status"] != "Not charging":
-            notify.send_status(cfg.btweaks)
+            remaining_time = calc_remaining_time()
+            notify.send_status(cfg.btweaks, remaining_time)
         cfg.update()
 
     if cfg.btweaks["status"] == 'Not charging':

@@ -84,6 +84,7 @@ TEMP_MAX = 55.0
 
 DEFAULT_SETTINGS = {
     "capacity": 0.0,
+    "capacity_design": 0.0,
     "percent": {
         "empty": LEVEL_EMPTY,
         "full": LEVEL_FULL,

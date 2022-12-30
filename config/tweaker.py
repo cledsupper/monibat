@@ -41,6 +41,8 @@ class Configuration():
         self.o_btweaks = None
         self.calibrate = False
         self.calibrate_aux = 0.0
+        self.chg_perc = None
+        self.chg_time = None
 
         self._updated_at = 0
         self._sender = None
@@ -80,13 +82,19 @@ class Configuration():
         else:
             self._updated_at = os.path.getmtime(FCONFIG)
 
-    def valid_settings(self, settings):
+    def valid_settings(self, settings) -> int:
         """Válida os parâmetros lidos antes de aplicar as configurações"""
         errcode = 0
         try:
-            capacity = settings.get('capacity', DEFAULT_SETTINGS['capacity'])
-            assert isinstance(capacity, float)
-            self.data['capacity'] = capacity
+            capacity = settings.get('capacity', None)
+            if capacity is not None:
+                assert isinstance(capacity, float)
+
+            design = settings.get('capacity_design', DEFAULT_SETTINGS['capacity_design'])
+            assert isinstance(design, float)
+
+            self.data['capacity'] = capacity if capacity else design
+            self.data['capacity_design'] = design
         except AssertionError:
             errcode = 1
 
@@ -116,7 +124,7 @@ class Configuration():
                 'high': high
             }
         except AssertionError:
-            errcode = 2
+            errcode += 2
 
         try:
             voltage = settings.get('voltage', DEFAULT_SETTINGS['voltage'])
@@ -137,7 +145,7 @@ class Configuration():
                 'high': high
             }
         except AssertionError:
-            errcode = 3
+            errcode += 4
 
         try:
             temp = settings.get('temp', DEFAULT_SETTINGS['temp'])
@@ -156,11 +164,12 @@ class Configuration():
                 'max': max
             }
         except AssertionError:
-            errcode = 4
+            errcode += 8
 
         return errcode
 
-    def fix_percent(self, btweaks: dict):
+    def fix_percent(self, btweaks: dict) -> int:
+        """Corrige o percentual da bateria através dos valores mínimo e máximo definidos na configuração."""
         p = btweaks['percent']
 
         if self.data['percent']['fix']:
@@ -176,17 +185,23 @@ class Configuration():
 
         return p
 
-    def fix_status(self, btweaks: dict):
+    def fix_status(self, btweaks: dict) -> str:
+        """Corrige o status da bateria segundo a corrente de (des)carga em certas condições."""
         capacity = self.data['capacity']
         if capacity:
             if btweaks['status'] == 'Full':
-                if btweaks['current'] >= 0.01*capacity:
+                if btweaks['current'] >= 0.03*capacity:
                     return 'Charging'
-            elif abs(btweaks['current']) < 0.01*capacity:
+            elif abs(btweaks['current']) < 0.03*capacity:
                 return 'Not charging'
         return btweaks['status']
 
-    def infer_percent(self, driver):
+    def fix_health(self, btweaks: dict) -> str:
+        """Corrige a saúde da bateria através da comparação entre a capacidade estimada e a capacidade real."""
+        return btweaks['health']
+
+    def infer_percent(self, driver) -> int:
+        """Infere o percentual da bateria em várias condições pressupostas."""
         status = driver.status()
         v = driver.voltage()
         if status == 'Full':
@@ -200,7 +215,7 @@ class Configuration():
                 vfull = self.data["voltage"]["full"]
                 vlow = self.data["voltage"]["low"]
                 p = (v - vlow)/(vfull - vlow)
-            p = int(p*100)
+            p = 1+int(p*100)
             if p > 100:
                 p = 100
             elif p < 0:
