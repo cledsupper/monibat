@@ -3,7 +3,7 @@
 ## Indicador de bateria altamente configurável com simulador de circuito de proteção.
 
 <div align="center">
-    <img src="https://github.com/cledsupper/monibat/blob/0b2519c4cd7051167c268b56957a506d7e3a4659/samples/preview.jpg" alt="MoniBat na barra de notificações do Android, mostrando tempo restante, percentual, temperatura, tensão e um score da saúde da bateria." style="height: 512px; width:236px;"/>
+    <img src="https://github.com/cledsupper/monibat/raw/0b2519c4cd7051167c268b56957a506d7e3a4659/samples/preview.jpg" alt="MoniBat na barra de notificações do Android, mostrando tempo restante, percentual, temperatura, tensão e um score da saúde da bateria." style="height: 512px; width:236px;"/>
 </div>
 
 ### INSTALAÇÃO
