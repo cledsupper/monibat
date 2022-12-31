@@ -90,7 +90,8 @@ class Configuration():
             if capacity is not None:
                 assert isinstance(capacity, float)
 
-            design = settings.get('capacity_design', DEFAULT_SETTINGS['capacity_design'])
+            design = settings.get(
+                'capacity_design', DEFAULT_SETTINGS['capacity_design'])
             assert isinstance(design, float)
 
             self.data['capacity'] = capacity if capacity else design
@@ -207,15 +208,22 @@ class Configuration():
         if status == 'Full':
             return 100
         elif v:
+            vmax = self.data["voltage"]["full"]
+            vmin = self.data["voltage"]["empty"]
+            vhigh = self.data["voltage"]["high"]
+            vlow = self.data["voltage"]["low"]
+            low = self.data["percent"]["low"]
             if status == 'Discharging':
-                vhigh = self.data["voltage"]["high"]
-                vempty = self.data["voltage"]["empty"]
-                p = (v - vempty)/(vhigh - vempty)
+                if v >= vlow:
+                    p = (v - vlow)/(vhigh - vlow)
+                    p = (100-low)*p + low
+                else:
+                    p = (v - vmin)/(vlow - vmin)
+                    p = low*p
             else:
-                vfull = self.data["voltage"]["full"]
-                vlow = self.data["voltage"]["low"]
-                p = (v - vlow)/(vfull - vlow)
-            p = 1+int(p*100)
+                p = 100*(v - vlow)/(vmax - vlow)
+
+            p = int(p)
             if p > 100:
                 p = 100
             elif p < 0:
