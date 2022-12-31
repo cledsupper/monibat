@@ -28,7 +28,7 @@ import calendar
 import time
 from typing import Optional
 
-from config.constants import APP_NAME, APP_PID, APP_PY, LEVEL, SUBPROCESS_TIMEOUT
+from config.constants import APP_NAME, APP_PID, APP_PY, DELAY_CHARGING, LEVEL, SUBPROCESS_TIMEOUT
 
 subprocess.run(
     ['termux-toast', '-h'],
@@ -128,12 +128,12 @@ def send_status(
         t = remaining_time
         st = calendar.timegm(t)
         if st >= 86400:
-            title = '%d dia(s) e %d h restantes' % (t.tm_day, t.tm_hour)
+            title = '%d dia(s) e %d h restantes' % (t.tm_mday, t.tm_hour)
         elif st >= 3600:
             title = '%d h e %d mins restantes' % (t.tm_hour, t.tm_min)
         elif st >= 60:
             title = '%d min e %d s restantes' % (t.tm_min, t.tm_sec)
-        else:
+        elif st > DELAY_CHARGING:
             title = '%d seg(s) restante(s)' % (t.tm_sec)
 
     termux_api_call(
