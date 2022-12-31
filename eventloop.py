@@ -31,25 +31,25 @@ from events import *
 
 def batt_refresh():
     batt = cfg.batt
-    bd = {}
-    bd["status"] = batt.status()
-    bd["percent"] = batt.percent()
-    bd["energy"] = batt.energy_now()
-    bd["capacity"] = batt.capacity()
-    bd["current"] = batt.current_now()
-    bd["temp"] = batt.temp()
-    bd["voltage"] = batt.voltage()
-    bd["technology"] = batt.technology()
-    bd["health"] = batt.health()
-    
+    bd = {
+        "status": batt.status(),
+        "percent": batt.percent(),
+        "energy": batt.energy_now(),
+        "capacity": batt.capacity(),
+        "current": batt.current_now(),
+        "temp": batt.temp(),
+        "voltage": batt.voltage(),
+        "technology": batt.technology(),
+        "health": batt.health(),
+        "level": 'Normal',
+        "scale": None
+    }
+
     if cfg.data["capacity_design"]:
         bd["scale"] = bd["capacity"] / cfg.data["capacity_design"]
-    else:
-        bd["scale"] = None
 
     bd["percent"] = cfg.fix_percent(bd)
     bd["status"] = cfg.fix_status(bd)
-    bd["level"] = 'Normal'
     if bd["percent"] == 100:
         bd["level"] = 'Full'
     elif bd["percent"] >= cfg.data["percent"]["high"]:
@@ -103,11 +103,6 @@ def run_events():
         cfg.chg_time = cfg.tnow
         result = True
 
-    # o_stnow = time.mktime(cfg.o_tnow)
-    # stnow = time.mktime(cfg.tnow)
-    # if (stnow - o_stnow) >= cfg.delay:
-        # result = True
-
     return result
 
 
@@ -116,9 +111,9 @@ def calc_remaining_time():
     # | agora - antes |
     pp = abs(bd['percent'] - cfg.chg_perc)
     if pp:
-        stnow = time.mktime(cfg.tnow) # agora
-        stchg = time.mktime(cfg.chg_time) # antes
-        s = stnow - stchg # tempo dos N pontos percs.
+        stnow = time.mktime(cfg.tnow)  # agora
+        stchg = time.mktime(cfg.chg_time)  # antes
+        s = stnow - stchg  # tempo dos N pontos percs.
         t = 0
         if bd['status'] != 'Charging':
             # tempo para descarregar

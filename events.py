@@ -22,12 +22,13 @@
 # Utilizado pelos módulos:
 # eventloop
 
+import driver
 from config.tweaker import *
 import notify
 
 cfg: Configuration = Configuration(notify.send_toast)
-notify.send_toast('Verificando depuração ADB (pode levar %d min)' % (SUBPROCESS_TIMEOUT/60))
-import driver
+notify.send_toast('Verificão da depuração ADB pode levar %d min' %
+                  (SUBPROCESS_TIMEOUT/60))
 cfg.batt = driver.Battery()
 if cfg.data["capacity"]:
     cfg.batt.start_emulating_cap(
@@ -153,9 +154,9 @@ def on_status_change(from_status: str):
     elif cfg.btweaks["status"] == 'Full':
         if cfg.calibrate:
             cfg.calibrate = False
-            cfg.calibrate_aux = cfg.o_btweaks["energy"] - cfg.calibrate_aux
-            cfg.calibrate_aux /= float(100 - cfg.data["percent"]["low"])/100.0
-            cfg.data["capacity"] = cfg.calibrate_aux
+            chgd = cfg.btweaks["energy"] - cfg.calibrate_aux
+            cfg.data["capacity"] = chgd / \
+                (float(100 - cfg.data["percent"]["low"])/100.0)
             cfg.save()
             cfg.batt.stop_emulating_cap()
             cfg.batt.start_emulating_cap(

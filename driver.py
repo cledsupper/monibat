@@ -51,23 +51,23 @@ if tmp:
     else:
         BATTERY_DIRPATH = tmp
 
-# rendiix fork is an ADB fix for Galaxy devices which allows getting voltage data
-HAVE_ADB = False
-try:
-    subprocess.run(
-        shlex.split('adb wait-for-device'),
-        check=True,
-        timeout=SUBPROCESS_TIMEOUT
-    )
-    HAVE_ADB = True
-except:
-    pass
-
 
 class Battery:
     """Classe Battery para acessar informações da bateria"""
 
+    # NOTE: rendiix has an ADB fork for Galaxy devices which actually works
+    HAVE_ADB = False
+
     def __init__(self, dirpath: str = BATTERY_DIRPATH, check_unit: bool = True):
+        try:
+            subprocess.run(
+                shlex.split('adb wait-for-device'),
+                check=True,
+                timeout=SUBPROCESS_TIMEOUT
+            )
+            Battery.HAVE_ADB = True
+        except:
+            pass
         self._cmd = dirpath
         self._unit_checked = check_unit
         self._sp_last_call = 0
@@ -154,7 +154,7 @@ class Battery:
     def voltage(self) -> Optional[float]:
         """Tensão da bateria (V)"""
         value = None
-        if HAVE_ADB:
+        if Battery.HAVE_ADB:
             try:
                 proc = subprocess.run(
                     shlex.split(
