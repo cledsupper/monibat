@@ -164,7 +164,7 @@ def on_status_change(from_status: str):
                 perc_start=100
             )
             notify.send_message(
-                'calibração concluída para: %0.2f Ah' % (cfg.calibrate_aux),
+                'calibração concluída para: %0.2f Ah' % (cfg.data["capacity"]),
                 title='bateria calibrada! ✅'
             )
         elif cfg.batt._td_up:
