@@ -191,9 +191,9 @@ class Configuration():
         capacity = self.data['capacity']
         if capacity:
             if btweaks['status'] == 'Full':
-                if btweaks['current'] >= 0.03*capacity:
+                if btweaks['current'] >= 0.01*capacity:
                     return 'Charging'
-            elif abs(btweaks['current']) < 0.03*capacity:
+            elif abs(btweaks['current']) < 0.01*capacity:
                 return 'Not charging'
         return btweaks['status']
 
