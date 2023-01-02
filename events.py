@@ -132,7 +132,7 @@ def on_temp_increase(delta: int):
 
     if temp >= cfg.data["temp"]["hot"]:
         cfg.a_temp_hot = True
-        if cfg.btweaks["status"] == 'Discharging'
+        if cfg.btweaks["status"] == 'Discharging':
             notify.send_message(
                 'Habilite a economia da energia para esfriar a bateria',
                 title='aviso de temperatura',
