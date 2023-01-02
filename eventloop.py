@@ -45,7 +45,7 @@ def batt_refresh():
         "scale": None
     }
 
-    if cfg.data["capacity_design"]:
+    if cfg.data["capacity_design"] and cfg.data["capacity_design"] != bd["capacity"]:
         bd["scale"] = bd["capacity"] / cfg.data["capacity_design"]
 
     bd["percent"] = cfg.fix_percent(bd)
@@ -110,7 +110,7 @@ def calc_remaining_time():
     bd = cfg.btweaks
     # | agora - antes |
     pp = abs(bd['percent'] - cfg.chg_perc)
-    if pp:
+    if pp > 2:
         stnow = time.mktime(cfg.tnow)  # agora
         stchg = time.mktime(cfg.chg_time)  # antes
         s = stnow - stchg  # tempo dos N pontos percs.

@@ -79,24 +79,34 @@ def on_voltage_increase(delta: int):
 
 
 def on_voltage_decrease(delta: int):
+    if cfg.calibrate or not cfg.batt._td_up or cfg.btweaks["status"] != 'Discharging':
+        return
+
+    c = (cfg.btweaks["current"] + cfg.o_btweaks["current"]) / 2
+    c = c/cfg.data["capacity_design"]
+
+    if c < BATTERY_SAVE_C_MIN or c > BATTERY_SAVE_C_MAX:
+        return
+
     v = cfg.btweaks["voltage"]
     lv = cfg.data["voltage"]["low"]
-    if not cfg.calibrate and v < lv:
-        if v >= lv-0.02:
-            cfg.calibrate = True
-            cfg.batt.stop_emulating_cap()
-            cfg.batt.start_emulating_cap(
-                cfg.data["capacity"],
-                perc_start=cfg.data["percent"]["low"]
-            )
-            cfg.calibrate_aux = cfg.data["percent"]["low"] * \
-                cfg.data["capacity"]
-            cfg.calibrate_aux /= 100
-            notify.send_message(
-                'carregue a bateria completamente para concluir',
-                title='calibração da bateria iniciada',
-                icon='battery_alert'
-            )
+    p = cfg.btweaks["percent"]
+    lp = cfg.data["percent"]["low"]
+
+    if v < lv and v >= lv-0.02 and abs(p-lp) >= 5:
+        cfg.calibrate = True
+        cfg.batt.stop_emulating_cap()
+        cfg.batt.start_emulating_cap(
+            cfg.data["capacity"],
+            perc_start=lp
+        )
+        cfg.calibrate_aux = (lp * cfg.data["capacity"])/100
+
+        notify.send_message(
+            'carregue a bateria completamente para concluir',
+            title='calibração da bateria iniciada ℹ',
+            icon='battery_alert'
+        )
 
 
 def on_temp_increase(delta: int):
@@ -112,7 +122,8 @@ def on_temp_increase(delta: int):
         notify.send_toast('📵 A BATERIA VAI EXPLODIR! 📵')
         notify.send_message(
             '📵 DESLIGUE O CELULAR AGORA! 📵',
-            title='A BATERIA VAI EXPLODIR 🧨 🔥'
+            title='A BATERIA VAI EXPLODIR 🧨 🔥',
+            icon='battery_alert'
         )
         return
 

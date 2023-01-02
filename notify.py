@@ -107,16 +107,19 @@ def send_status(
     remaining_time: Optional[time.struct_time] = None
 ):
     global status_shown
+
     icon = 'battery_std'
     if btweaks['status'] == 'Charging':
         icon = 'battery_charging_full'
+    elif btweaks['level'] == 'Low' or btweaks['level'] == 'Critical':
+            icon = 'battery_alert'
+
+    if btweaks['scale'] is None or btweaks['status'] == 'Charging':
         message = '%d %% (%0.2f A) | 🌡 %0.1f °C' % (
             btweaks['percent'], btweaks['current'], btweaks['temp'])
     else:
         message = '%d %% | 🌡 %0.1f °C' % (
             btweaks['percent'], btweaks['temp'])
-        if btweaks['level'] == 'Low' or btweaks['level'] == 'Critical':
-            icon = 'battery_alert'
 
     if btweaks['voltage'] is not None:
         message += ' | ⚡ %0.2f V' % (btweaks['voltage'])

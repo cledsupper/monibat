@@ -91,7 +91,9 @@ class Configuration():
                 assert isinstance(capacity, float)
 
             design = settings.get(
-                'capacity_design', DEFAULT_SETTINGS['capacity_design'])
+                'capacity_design',
+                DEFAULT_SETTINGS['capacity_design']
+            )
             assert isinstance(design, float)
 
             self.data['capacity'] = capacity if capacity else design
