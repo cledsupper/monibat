@@ -93,7 +93,7 @@ def on_voltage_decrease(delta: int):
     p = cfg.btweaks["percent"]
     lp = cfg.data["percent"]["low"]
 
-    if v < lv and v >= lv-0.02 and abs(p-lp) >= 5:
+    if v < lv and v >= lv-0.05 and abs(p-lp) >= 5:
         cfg.calibrate = True
         cfg.batt.stop_emulating_cap()
         cfg.batt.start_emulating_cap(

@@ -53,7 +53,7 @@ SUBPROCESS_TIMEOUT = 60
 
 # Limites de descarga para iniciar a calibração da bateria
 BATTERY_SAVE_C_MIN = 0.05 # Coulomb: 0,05*5000 = 250 mA
-BATTERY_SAVE_C_MAX = 0.1
+BATTERY_SAVE_C_MAX = 0.25 # ... = 1.250 mA
 
 DRIVER_SLEEP = 10
 DELAY_CHARGING = 10
