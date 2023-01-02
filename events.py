@@ -123,7 +123,7 @@ def on_temp_increase(delta: int):
         notify.send_message(
             '📵 DESLIGUE O CELULAR AGORA! 📵',
             title='A BATERIA VAI EXPLODIR 🧨 🔥',
-            icon='battery_alert'
+            icon='hot_tub'
         )
         return
 
@@ -132,10 +132,18 @@ def on_temp_increase(delta: int):
 
     if temp >= cfg.data["temp"]["hot"]:
         cfg.a_temp_hot = True
-        notify.send_message(
-            'Habilite a economia da energia para esfriar a bateria',
-            title='aviso de temperatura'
-        )
+        if cfg.btweaks["status"] == 'Discharging'
+            notify.send_message(
+                'Habilite a economia da energia para esfriar a bateria',
+                title='aviso de temperatura',
+                icon='battery_alert'
+            )
+        else:
+            notify.send_message(
+                'Desconecte o carregador para esfriar a bateria',
+                title='aviso de temperatura',
+                icon='battery_alert'
+            )
 
 
 def on_temp_decrease(delta: int):
@@ -153,7 +161,8 @@ def on_temp_decrease(delta: int):
         cfg.a_temp_min = True
         notify.send_message(
             'O desempenho da bateria deve piorar bastante! 📉',
-            title='bateria gelada 🧊'
+            title='bateria gelada 🧊',
+            icon='ac_unit'
         )
 
 
