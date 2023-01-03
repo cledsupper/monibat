@@ -44,6 +44,8 @@ def recalibrate_start():
         return False
 
     v = cfg.btweaks["voltage"]
+    if v is None:
+        return
     lv = cfg.data["voltage"]["low"]
     p = cfg.btweaks["percent"]
     lp = cfg.data["percent"]["low"]

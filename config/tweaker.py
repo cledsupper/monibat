@@ -32,6 +32,7 @@ from .constants import *
 class Configuration():
     def __init__(self, toast_cb=None):
         self.data = DEFAULT_SETTINGS
+
         self.btweaks = {}
         self.delay = DELAY_CHARGING
         self.batt = None
@@ -39,10 +40,11 @@ class Configuration():
         self.tnow = None
         self.btweaks = None
         self.o_btweaks = None
-        self.calibrate = False
-        self.calibrate_aux = 0.0
         self.chg_perc = None
         self.chg_time = None
+
+        self.calibrate = False
+        self.calibrate_aux = 0.0
 
         self._updated_at = 0
         self._sender = None
