@@ -26,6 +26,13 @@ Inicialização automática:
 
 Execute o Termux:Boot uma vez para que o MoniBat seja executado toda vez que reiniciar o sistema Android.
 
+```
+NOTE:
+
+Desative a otimização de bateria (ou a opção "sem restrição" de execução em segundo plano) para o Termux, Termux:Boot e Termux:API!
+Caso contrário o processo do MoniBat será encerrado pelo task killer do Android.
+```
+
 Calibre a bateria com ADB:
 
 Infelizmente, para evitar erros de calibração, o emulador do MoniBat não tentará calibrar sem ter acesso à tensão da bateria. Portanto, será necessário o uso do ADB.
@@ -56,7 +63,7 @@ Após isso, você pode desativar a depuração via WiFi no menu desenvolvedor ca
 ```
 NOTE:
 
-Como na calibração manual, pode ser necessário reconectar o carregador caso a bateria tenha terminado a carga antes do sistema Android mostrar 100 %.
+Pode ser necessário reconectar o carregador caso a bateria tenha terminado a carga antes do sistema Android mostrar 100 %.
 ```
 
 6. Desconecte do carregador e aproveite um celular que não descarga sem você saber!
