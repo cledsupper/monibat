@@ -12,7 +12,7 @@ Instale as dependências necessárias:
 
 1. Baixe via F-Droid e instale: Termux, Termux:Boot e Termux:API (versão 0.49 para o ícone do MoniBat funcionar);
 2. Atualize o sistema com o comando (pkg upgrade);
-3. Instale os pacotes "termux-api", "python" e "android-tools" (ou a versão do ADB por rendiix[^1] que corrige erro em smartphones Galaxy).
+3. Instale os pacotes "termux-api", "python" e "android-tools" (ou a versão do ADB por [rendiix] que corrige erro em smartphones Galaxy).
 
 Instale o MoniBat a partir do install.sh:
 
@@ -62,4 +62,4 @@ Como na calibração manual, pode ser necessário reconectar o carregador caso a
 6. Desconecte do carregador e aproveite um celular que não descarga sem você saber!
 
 
-[]: [termux-platform-tools](https://github.com/rendiix/termux-adb-fastboot)
+[rendiix]: [termux-platform-tools](https://github.com/rendiix/termux-adb-fastboot)
