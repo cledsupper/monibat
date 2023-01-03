@@ -146,10 +146,7 @@ def iterate():
             notify.send_status(cfg.btweaks, remaining_time)
         cfg.update()
 
-    if cfg.btweaks["status"] == 'Not charging':
-        time.sleep(DELAY_DISCHARGING)
-    else:
-        time.sleep(DELAY_CHARGING)
+    time.sleep(cfg.delay)
 
 
 def cleanup():

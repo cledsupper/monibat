@@ -38,6 +38,55 @@ if cfg.data["capacity"]:
 cfg.delay = DELAY_CHARGING if cfg.batt.charging() else DELAY_DISCHARGING
 
 
+def recalibrate_start():
+    """Ação para calibrar a bateria quando da tensão discrepante à carga."""
+    if cfg.calibrate or not (cfg.batt._td_up and cfg.btweaks["status"] == 'Discharging'):
+        return False
+
+    v = cfg.btweaks["voltage"]
+    lv = cfg.data["voltage"]["low"]
+    p = cfg.btweaks["percent"]
+    lp = cfg.data["percent"]["low"]
+
+    if (v >= lv-0.05 and v < lv) and abs(p-lp) >= 5:
+        cfg.calibrate = True
+        cfg.batt.stop_emulating_cap()
+        cfg.batt.start_emulating_cap(
+            cfg.data["capacity"],
+            perc_start=lp
+        )
+        cfg.calibrate_aux = (lp * cfg.data["capacity"])/100
+
+        notify.send_message(
+            'carregue a bateria completamente para concluir',
+            title='calibração da bateria iniciada ℹ',
+            icon='battery_alert'
+        )
+        return True
+
+    return False
+
+def recalibrate_finish():
+    if not cfg.calibrate:
+        return False
+
+    cfg.calibrate = False
+    chgd = cfg.btweaks["energy"] - cfg.calibrate_aux
+    cfg.data["capacity"] = chgd / \
+        (float(100 - cfg.data["percent"]["low"])/100.0)
+    cfg.save()
+    cfg.batt.stop_emulating_cap()
+    cfg.batt.start_emulating_cap(
+        cfg.data["capacity"],
+        perc_start=100
+    )
+    notify.send_message(
+        'calibração concluída para: %0.2f Ah' % (cfg.data["capacity"]),
+        title='bateria calibrada! ✅'
+    )
+    return True
+
+
 def on_percent_increase(delta: int):
     percent = cfg.btweaks["percent"]
 
@@ -57,6 +106,9 @@ def on_percent_increase(delta: int):
 
 
 def on_percent_decrease(delta: int):
+    if recalibrate_start():
+        return
+
     percent = cfg.btweaks["percent"]
 
     if cfg.a_percent_high and percent < cfg.data["percent"]["high"]:
@@ -77,37 +129,8 @@ def on_percent_decrease(delta: int):
 def on_voltage_increase(delta: int):
     pass
 
-
 def on_voltage_decrease(delta: int):
-    if cfg.calibrate or not cfg.batt._td_up or cfg.btweaks["status"] != 'Discharging':
-        return
-
-    c = (cfg.btweaks["current"] + cfg.o_btweaks["current"]) / 2
-    c = c/cfg.data["capacity_design"]
-
-    if c < BATTERY_SAVE_C_MIN or c > BATTERY_SAVE_C_MAX:
-        return
-
-    v = cfg.btweaks["voltage"]
-    lv = cfg.data["voltage"]["low"]
-    p = cfg.btweaks["percent"]
-    lp = cfg.data["percent"]["low"]
-
-    if v < lv and v >= lv-0.05 and abs(p-lp) >= 5:
-        cfg.calibrate = True
-        cfg.batt.stop_emulating_cap()
-        cfg.batt.start_emulating_cap(
-            cfg.data["capacity"],
-            perc_start=lp
-        )
-        cfg.calibrate_aux = (lp * cfg.data["capacity"])/100
-
-        notify.send_message(
-            'carregue a bateria completamente para concluir',
-            title='calibração da bateria iniciada ℹ',
-            icon='battery_alert'
-        )
-
+    recalibrate_start()
 
 def on_temp_increase(delta: int):
     temp = cfg.btweaks["temp"]
@@ -172,22 +195,8 @@ def on_status_change(from_status: str):
         if from_status == 'Not charging' or from_status == 'Full':
             notify.send_toast('O conector foi conectado 🔌🔋')
     elif cfg.btweaks["status"] == 'Full':
-        if cfg.calibrate:
-            cfg.calibrate = False
-            chgd = cfg.btweaks["energy"] - cfg.calibrate_aux
-            cfg.data["capacity"] = chgd / \
-                (float(100 - cfg.data["percent"]["low"])/100.0)
-            cfg.save()
-            cfg.batt.stop_emulating_cap()
-            cfg.batt.start_emulating_cap(
-                cfg.data["capacity"],
-                perc_start=100
-            )
-            notify.send_message(
-                'calibração concluída para: %0.2f Ah' % (cfg.data["capacity"]),
-                title='bateria calibrada! ✅'
-            )
-        elif cfg.batt._td_up:
+        cfg.delay = DELAY_DISCHARGING
+        if not recalibrate_finish() and cfg.batt._td_up:
             if int(cfg.btweaks["capacity"]*1000) != int(cfg.btweaks["energy"]*1000):
                 cfg.batt.reset_cap()
     else:
