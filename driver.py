@@ -1,6 +1,6 @@
 # driver.py - MoniBat Termux:API Battery Interface and Capacity Counter
 #
-#  Copyright (c) 2022 Cledson Ferreira
+#  Copyright (c) 2022, 2023 Cledson Ferreira
 #
 #  Author: Cledson Ferreira <cledsonitgames@gmail.com>
 #

@@ -1,6 +1,6 @@
 # events.py - MoniBat's general set of alarms/events
 #
-#  Copyright (c) 2022 Cledson Ferreira
+#  Copyright (c) 2022, 2023 Cledson Ferreira
 #
 #  Author: Cledson Ferreira <cledsonitgames@gmail.com>
 #
@@ -26,7 +26,7 @@ import driver
 from config.tweaker import *
 import notify
 
-cfg: Configuration = Configuration(notify.send_toast)
+cfg = Configuration(notify.send_toast)
 notify.send_toast('Verificão da depuração ADB pode levar %d min' %
                   (SUBPROCESS_TIMEOUT/60))
 cfg.batt = driver.Battery()
@@ -47,8 +47,9 @@ def recalibrate_start():
     if v is None:
         return
     lv = cfg.data["voltage"]["low"]
+    vtyp = str(cfg.data["voltage"]["typ"])
     p = cfg.btweaks["percent"]
-    lp = cfg.data["percent"]["low"]
+    lp = LEVEL_LOW_BY_VOLTAGE_TYP[vtyp]
 
     if (v >= lv-0.05 and v < lv) and abs(p-lp) >= 5:
         cfg.calibrate = True
@@ -73,9 +74,10 @@ def recalibrate_finish():
         return False
 
     cfg.calibrate = False
+    vtyp = str(self.data["voltage"]["typ"])
     chgd = cfg.btweaks["energy"] - cfg.calibrate_aux
     cfg.data["capacity"] = chgd / \
-        (float(100 - cfg.data["percent"]["low"])/100.0)
+        (float(100 - LEVEL_LOW_BY_VOLTAGE_TYP[vtyp])/100.0)
     cfg.save()
     cfg.batt.stop_emulating_cap()
     cfg.batt.start_emulating_cap(
@@ -83,7 +85,7 @@ def recalibrate_finish():
         perc_start=100
     )
     notify.send_message(
-        'calibração concluída para: %0.2f Ah' % (cfg.data["capacity"]),
+        'resultado: %0.2f Ah' % (cfg.data["capacity"]),
         title='bateria calibrada! ✅'
     )
     return True

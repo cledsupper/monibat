@@ -1,6 +1,6 @@
 # notify.py - MoniBat Termux:API Interface
 #
-#  Copyright (c) 2022 Cledson Ferreira
+#  Copyright (c) 2022, 2023 Cledson Ferreira
 #
 #  Author: Cledson Ferreira <cledsonitgames@gmail.com>
 #
@@ -136,8 +136,6 @@ def send_status(
             title = '%d h e %d mins restantes' % (t.tm_hour, t.tm_min)
         elif st >= 60:
             title = '%d min e %d s restantes' % (t.tm_min, t.tm_sec)
-        elif st > DELAY_CHARGING:
-            title = '%d seg(s) restante(s)' % (t.tm_sec)
 
     termux_api_call(
         message,

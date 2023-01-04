@@ -1,6 +1,6 @@
 # tweaker.py - MoniBat Application Context and Configuration Class
 #
-#  Copyright (c) 2022 Cledson Ferreira
+#  Copyright (c) 2022, 2023 Cledson Ferreira
 #
 #  Author: Cledson Ferreira <cledsonitgames@gmail.com>
 #
@@ -143,11 +143,16 @@ class Configuration():
             assert low < high
             assert low > VOLTAGE_EMPTY
 
+            typ = voltage.get('typ', VOLTAGE_TYP)
+            assert typ > empty
+            assert typ < full
+
             self.data['voltage'] = {
                 'empty': empty,
                 'full': full,
                 'low': low,
-                'high': high
+                'high': high,
+                'typ': typ
             }
         except AssertionError:
             errcode += 4
@@ -216,7 +221,8 @@ class Configuration():
             vmin = self.data["voltage"]["empty"]
             vhigh = self.data["voltage"]["high"]
             vlow = self.data["voltage"]["low"]
-            low = self.data["percent"]["low"]
+            vtyp = self.data["voltage"]["typ"]
+            low = LEVEL_LOW_BY_VOLTAGE_TYP[str(vlow)]
             if status == 'Discharging':
                 if v >= vlow:
                     p = (v - vlow)/(vhigh - vlow)

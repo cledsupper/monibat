@@ -1,6 +1,6 @@
 # constants.py - Various values used in MoniBat source code
 #
-#  Copyright (c) 2022 Cledson Ferreira
+#  Copyright (c) 2022, 2023 Cledson Ferreira
 #
 #  Author: Cledson Ferreira <cledsonitgames@gmail.com>
 #
@@ -68,8 +68,15 @@ LEVEL_FULL = 100
 LEVEL_LOW = 15
 LEVEL_HIGH = 80
 
+LEVEL_LOW_BY_VOLTAGE_TYP = {
+    '3.7': 30,
+    '3.8': 20,
+    '3.85': 15
+    # NOTE: caso necessário, adicione a tensão típica da sua bateria!
+}
+
 LEVEL = {
-    "Critical": "vazia",
+    "Critical": "reserva de emergência",
     "Low": "fraca",
     "Normal": "normal",
     "High": "carregada",
@@ -94,17 +101,19 @@ DEFAULT_SETTINGS = {
         "full": LEVEL_FULL,
         "fix": False,
         "low": LEVEL_LOW,
-        "high": LEVEL_HIGH,
+        "high": LEVEL_HIGH
     },
     "voltage": {
         "empty": VOLTAGE_EMPTY,
         "full": VOLTAGE_FULL,
+        # NÃO CONFUNDA ESTES VALORES COM SEUS RESPECTIVOS EM "percent"!
         "low": VOLTAGE_LOW,
         "high": VOLTAGE_FULL,
+        "typ": VOLTAGE_TYP
     },
     "temp": {
         "min": TEMP_MIN,
         "hot": TEMP_HOT,
-        "max": TEMP_MAX,
+        "max": TEMP_MAX
     }
 }
