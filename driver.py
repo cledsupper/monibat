@@ -37,21 +37,6 @@ def to_linux_str(termux_str: str) -> str:
     return termux_str[0] + termux_str[1:].lower().replace('_', ' ')
 
 
-tmp = os.getenv('BATTERY_DIRPATH')
-if tmp:
-    try:
-        subprocess.run(
-            shlex.split(tmp),
-            capture_output=True,
-            check=True,
-            timeout=SUBPROCESS_TIMEOUT
-        )
-    except:
-        raise RuntimeError('error when tried to run BATTERY_DIRPATH')
-    else:
-        BATTERY_DIRPATH = tmp
-
-
 class Battery:
     """Classe Battery para acessar informações da bateria"""
 
