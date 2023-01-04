@@ -222,7 +222,7 @@ class Configuration():
             vhigh = self.data["voltage"]["high"]
             vlow = self.data["voltage"]["low"]
             vtyp = str(self.data["voltage"]["typ"])
-            low = LEVEL_LOW_BY_VOLTAGE_TYP[str(vtyp)]
+            low = LEVEL_LOW_BY_VOLTAGE_TYP[vtyp]
             if status == 'Discharging':
                 if v >= vlow:
                     p = (v - vlow)/(vhigh - vlow)
