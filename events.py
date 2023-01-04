@@ -69,12 +69,13 @@ def recalibrate_start():
 
     return False
 
+
 def recalibrate_finish():
     if not cfg.calibrate:
         return False
 
     cfg.calibrate = False
-    vtyp = str(self.data["voltage"]["typ"])
+    vtyp = str(cfg.data["voltage"]["typ"])
     chgd = cfg.btweaks["energy"] - cfg.calibrate_aux
     cfg.data["capacity"] = chgd / \
         (float(100 - LEVEL_LOW_BY_VOLTAGE_TYP[vtyp])/100.0)
@@ -133,8 +134,10 @@ def on_percent_decrease(delta: int):
 def on_voltage_increase(delta: int):
     pass
 
+
 def on_voltage_decrease(delta: int):
     recalibrate_start()
+
 
 def on_temp_increase(delta: int):
     temp = cfg.btweaks["temp"]
