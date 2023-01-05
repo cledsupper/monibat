@@ -33,7 +33,66 @@ Desative a otimização de bateria (ou a opção "sem restrição" de execução
 Caso contrário o processo do MoniBat será encerrado pelo task killer do Android.
 ```
 
-Calibre a bateria com ADB:
+#### a) Calibre a bateria apenas reiniciando o serviço:
+
+1. Descubra e configure a tensão nominal da sua bateria a partir de uma carga completa.
+
+    1. Se a tensão for maior que 4,34 V, é porque a bateria do seu smartphone/tablet é de 3,85 V de tensão típica. Defina isto no arquivo do configuração[^2]:
+
+    ```json
+    "voltage": {
+        ...
+        "typ": 3.85
+    }
+    ```
+
+    2. Se a tensão for maior que 4,2 V, é porque a bateria é de 3,8 V de tensão típica. Defina isto no arquivo de configuração:
+  
+    ```json
+    "voltage": {
+        ...
+        "typ": 3.8
+    }
+    ```
+
+
+    3. No entanto, se a tensão for 4,2 V:
+    ```json
+    "voltage": {
+        ...
+        "typ": 3.7
+    }
+    ```
+
+Pack de baterias em paralelo (tensões diferentes das especificadas acima) não é suportado por padrão! no entanto, é possível adicionar o suporte ao duplicar e modificar uma linha do arquivo constants.py, o dicionário LEVEL_LOW_BY_VOLTAGE_TYP. Após isso, basta modificar o arquivo de configuração[^2] para as voltagens serem multiplicadas em duas, três ou mais células.
+
+2. Execute o MoniBat. Ele deve mostrar um nível de bateria muito baixo. Você pode simplesmente ignorar.
+
+Para executar o MoniBat sem precisar reiniciar o sistema Android:
+> ~/.termux/boot/moni.sh
+
+Isso vai prender o seu terminal por pelo menos um minuto. Após aparecer a notificação, você pode tocar no botão "reiniciar" para que a linha de comandos seja liberada.
+
+
+3. Descarregue o dispositivo até a tensão atingir 3,7 V (é um nível de energia fraco, mas ainda seguro). Você pode acompanhar a tensão com um aplicativo gratuito como o [BatteryBot Status Indicator](https://play.google.com/store/apps/details?id=com.darshancomputing.BatteryIndicator).
+
+```
+NOTE:
+
+O Termux não permite visualizar a tensão da bateria. Como não é um problema meu, não jogue essa culpa em mim por esse inconveniente!
+Ainda estou estudando para lançar um app que não depende do Termux, mas desenvolver para Android é muito cansativo.
+```
+
+4. Neste ponto, reinicie o MoniBat. Quando o nível de bateria mudar para o mesmo nível baixo de quando você iniciou pela primeira vez, você deve carregar o dispositivo COMPLETAMENTE.
+```
+NOTE:
+
+Pode ser necessário desconectar e conectar o carregador mais uma vez, pois a bateria pode ter terminado de carregar antes do Android mostrar 100 %.
+Quando aparecer a notificação de calibração concluída, neste momento você pode desconectar o carregador e viver tranquilamente com o MoniBat executando em segundo plano.
+```
+
+
+#### b) Calibre a bateria com ADB:
 
 Infelizmente, para evitar erros de calibração, o emulador do MoniBat não tentará calibrar sem ter acesso à tensão da bateria. Portanto, será necessário o uso do ADB.
 
@@ -63,10 +122,12 @@ Após isso, você pode desativar a depuração via WiFi no menu desenvolvedor ca
 ```
 NOTE:
 
-Pode ser necessário reconectar o carregador caso a bateria tenha terminado a carga antes do sistema Android mostrar 100 %.
+Como na calibração manual, pode ser necessário reconectar o carregador caso a bateria tenha terminado a carga antes do sistema Android mostrar 100 %.
 ```
 
 6. Desconecte do carregador e aproveite um celular que não descarga sem você saber!
 
 
 [^1]: [termux-platform-tools](https://github.com/rendiix/termux-adb-fastboot)
+
+[^2]: O arquivo está localizado na pasta "samples" ou ainda, se o MoniBat já estiver instalado, "~/.config/MoniBat".
