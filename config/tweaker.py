@@ -239,6 +239,8 @@ class Configuration():
             elif p < 0:
                 p = 0
             return p
+        self.calibrate = True
+        self.calibrate_aux = (low * self.data["capacity"]) / 100
         return low
 
     def reset_alarms(self):
