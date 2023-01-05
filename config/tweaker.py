@@ -214,6 +214,8 @@ class Configuration():
         """Infere o percentual da bateria em várias condições pressupostas."""
         status = driver.status()
         v = driver.voltage()
+        vtyp = str(self.data["voltage"]["typ"])
+        low = LEVEL_LOW_BY_VOLTAGE_TYP[vtyp]
         if status == 'Full':
             return 100
         elif v:
@@ -221,8 +223,6 @@ class Configuration():
             vmin = self.data["voltage"]["empty"]
             vhigh = self.data["voltage"]["high"]
             vlow = self.data["voltage"]["low"]
-            vtyp = str(self.data["voltage"]["typ"])
-            low = LEVEL_LOW_BY_VOLTAGE_TYP[vtyp]
             if status == 'Discharging':
                 if v >= vlow:
                     p = (v - vlow)/(vhigh - vlow)
@@ -239,7 +239,7 @@ class Configuration():
             elif p < 0:
                 p = 0
             return p
-        return self.data["percent"]["low"]
+        return low
 
     def reset_alarms(self):
         self.a_percent_high = False
