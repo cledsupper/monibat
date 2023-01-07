@@ -76,9 +76,10 @@ def recalibrate_finish():
 
     cfg.calibrate = False
     vtyp = str(cfg.data["voltage"]["typ"])
+    low = LEVEL_LOW_BY_VOLTAGE_TYP[vtyp]
     chgd = cfg.btweaks["energy"] - cfg.calibrate_aux
     cfg.data["capacity"] = chgd / \
-        (float(100 - LEVEL_LOW_BY_VOLTAGE_TYP[vtyp])/100.0)
+        (float(100 - low)/100.0)
     cfg.save()
     cfg.batt.stop_emulating_cap()
     cfg.batt.start_emulating_cap(

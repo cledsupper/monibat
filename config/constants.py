@@ -52,16 +52,14 @@ BATTERY_DIRPATH = 'termux-battery-status'
 SUBPROCESS_TIMEOUT = 60
 
 # Limites de descarga para iniciar a calibração da bateria
-BATTERY_SAVE_C_MIN = 0.05 # Coulomb: 0,05*5000 = 250 mA
-BATTERY_SAVE_C_MAX = 0.25 # ... = 1.250 mA
+BATTERY_SAVE_C_MIN = 0.03  # Coulomb: 0,03*5000 = 150 mA
+BATTERY_SAVE_C_MAX = 0.2  # ... = 1.000 mA
 
 DRIVER_SLEEP = 10
 DELAY_CHARGING = 10
 DELAY_DISCHARGING = 60
 
 INDENTATION_DEFAULT = 4
-
-TERMUX_ERRORS_LIMIT = 15
 
 LEVEL_EMPTY = 0
 LEVEL_FULL = 100
