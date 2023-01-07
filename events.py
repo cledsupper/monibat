@@ -27,8 +27,7 @@ from config.tweaker import *
 import notify
 
 cfg = Configuration(notify.send_toast)
-notify.send_toast('Verificão da depuração ADB pode levar %d min' %
-                  (SUBPROCESS_TIMEOUT/60))
+notify.send_toast(EVENTS_ADB_CHECK_WARNING % (SUBPROCESS_TIMEOUT/60))
 cfg.batt = driver.Battery()
 if cfg.data["capacity"]:
     cfg.batt.start_emulating_cap(
@@ -61,8 +60,8 @@ def recalibrate_start():
         cfg.calibrate_aux = (lp * cfg.data["capacity"])/100
 
         notify.send_message(
-            'carregue a bateria completamente para concluir',
-            title='calibração da bateria iniciada ℹ',
+            EVENTS_RECALIBRATE_START_MESSAGE,
+            title=EVENTS_RECALIBRATE_START_TITLE,
             icon='battery_alert'
         )
         return True
@@ -87,8 +86,8 @@ def recalibrate_finish():
         perc_start=100
     )
     notify.send_message(
-        'resultado: %0.2f Ah' % (cfg.data["capacity"]),
-        title='bateria calibrada! ✅'
+        EVENTS_RECALIBRATE_FINISH_MESSAGE % (cfg.data["capacity"]),
+        title=EVENTS_RECALIBRATE_FINISH_TITLE
     )
     return True
 
@@ -106,8 +105,8 @@ def on_percent_increase(delta: int):
     if status == 'Charging' and percent >= cfg.data["percent"]["high"]:
         cfg.a_percent_high = True
         notify.send_message(
-            'Desconecte o carregador para preservar a saúde da bateria',
-            title='aviso de carga'
+            EVENTS_ALARM_PERCENT_HIGH_MESSAGE,
+            title=EVENTS_ALARM_PERCENT_TITLE
         )
 
 
@@ -127,8 +126,8 @@ def on_percent_decrease(delta: int):
     if status == 'Discharging' and percent < cfg.data["percent"]["low"]:
         cfg.a_percent_low = True
         notify.send_message(
-            'Conecte o carregador para preservar a saúde da bateria',
-            title='bateria fraca 📉'
+            EVENTS_ALARM_PERCENT_LOW_MESSAGE,
+            title=EVENTS_ALARM_PERCENT_LOW_TITLE
         )
 
 
@@ -150,10 +149,10 @@ def on_temp_increase(delta: int):
 
     if temp >= cfg.data["temp"]["max"]:
         cfg.a_temp_max = True
-        notify.send_toast('📵 A BATERIA VAI EXPLODIR! 📵')
+        notify.send_toast(EVENTS_ALARM_TEMPERATURE_MAX_TOAST)
         notify.send_message(
-            '📵 DESLIGUE O CELULAR AGORA! 📵',
-            title='A BATERIA VAI EXPLODIR 🧨 🔥',
+            EVENTS_ALARM_TEMPERATURE_MAX_MESSAGE,
+            title=EVENTS_ALARM_TEMPERATURE_MAX_TITLE,
             icon='hot_tub'
         )
         return
@@ -165,14 +164,14 @@ def on_temp_increase(delta: int):
         cfg.a_temp_hot = True
         if cfg.btweaks["status"] == 'Discharging':
             notify.send_message(
-                'Habilite a economia da energia para esfriar a bateria',
-                title='aviso de temperatura',
+                EVENTS_ALARM_TEMPERATURE_HIGH_WHEN_DISCHARGING,
+                title=EVENTS_ALARM_TEMPERATURE_TITLE,
                 icon='battery_alert'
             )
         else:
             notify.send_message(
-                'Desconecte o carregador para esfriar a bateria',
-                title='aviso de temperatura',
+                EVENTS_ALARM_TEMPERATURE_HIGH_WHEN_CHARGING,
+                title=EVENTS_ALARM_TEMPERATURE_TITLE,
                 icon='battery_alert'
             )
 
@@ -191,8 +190,8 @@ def on_temp_decrease(delta: int):
     if temp <= cfg.data["temp"]["min"]:
         cfg.a_temp_min = True
         notify.send_message(
-            'O desempenho da bateria deve piorar bastante! 📉',
-            title='bateria gelada 🧊',
+            EVENTS_ALARM_TEMPERATURE_MIN_MESSAGE,
+            title=EVENTS_ALARM_TEMPERATURE_TITLE,
             icon='ac_unit'
         )
 
@@ -201,7 +200,7 @@ def on_status_change(from_status: str):
     if cfg.btweaks['status'] == 'Charging':
         cfg.delay = DELAY_CHARGING
         if from_status == 'Not charging' or from_status == 'Full':
-            notify.send_toast('O conector foi conectado 🔌🔋')
+            notify.send_toast(EVENTS_ALARM_STATUS_CONNECTED)
     elif cfg.btweaks["status"] == 'Full':
         cfg.delay = DELAY_DISCHARGING
         if not recalibrate_finish() and cfg.batt._td_up:
@@ -211,5 +210,5 @@ def on_status_change(from_status: str):
         cfg.delay = DELAY_DISCHARGING
         if cfg.btweaks['status'] == 'Discharging':
             if from_status == 'Full' or from_status == 'Charging':
-                notify.send_toast('O conector foi desconectado 🔋')
+                notify.send_toast(EVENTS_ALARM_STATUS_DISCONNECTED)
     cfg.reset_alarms()

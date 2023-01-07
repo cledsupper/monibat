@@ -20,13 +20,14 @@
 #  USA
 
 # Utilizado pelos módulos:
-# -> eventloop, events, service
+# -> events, service
 
 import json
 import logging
 from typing import Optional
 
-from .constants import *
+from config.constants import *
+from data.messages import *
 
 
 class Configuration():
@@ -67,9 +68,9 @@ class Configuration():
 
         if self._sender:
             if errcode == 0:
-                self._sender('configuração atualizada')
+                self._sender(TWEAKER_CFG_READ_SUCCESS)
             else:
-                self._sender('erro de config., cód.: %d' % (errcode))
+                self._sender(TWEAKER_CFG_READ_FAILED % (errcode))
 
     def save(self):
         err = None
@@ -80,7 +81,7 @@ class Configuration():
             err = e
         if err:
             logging.exception('Configuration.save()')
-            self._sender('falha ao salvar configuração!')
+            self._sender(TWEAKER_CFG_SAVE_FAILED)
         else:
             self._updated_at = os.path.getmtime(FCONFIG)
 

@@ -28,7 +28,8 @@ import calendar
 import time
 from typing import Optional
 
-from config.constants import APP_NAME, APP_PID, APP_PY, DELAY_CHARGING, LEVEL, SUBPROCESS_TIMEOUT
+from config.constants import APP_NAME, APP_PID, APP_PY, LEVEL, SUBPROCESS_TIMEOUT
+from data.messages import *
 
 subprocess.run(
     ['termux-toast', '-h'],
@@ -50,7 +51,7 @@ status_shown = False
 def termux_api_call(
     message: str,
     icon='battery_std',
-    title='estado da bateria',
+    title=NOTIFY_BATTERY_STATUS_TITLE,
     as_status=False,
     as_toast=False,
     as_error=False,
@@ -64,9 +65,10 @@ def termux_api_call(
             '--ongoing', '--alert-once',
             '-t', '%s: %s' % (APP_NAME, title),
             '-c', message,
-            '--button1', 'reiniciar', '--button1-action', 'python %s' % (
+            '--button1', NOTIFY_BATTERY_STATUS_BUTTON_RESTART, '--button1-action', 'python %s' % (
                 APP_PY),
-            '--button2', 'encerrar', '--button2-action', 'kill %d' % (APP_PID)
+            '--button2', NOTIFY_BATTERY_STATUS_BUTTON_EXIT, '--button2-action', 'kill %d' % (
+                APP_PID)
         ]
     else:
         pars = [
@@ -94,7 +96,7 @@ def termux_api_call(
         raise RuntimeError('FATAL: %s' % (message))
 
 
-def send_message(message: str, title='mensagem do serviço', icon='battery_std'):
+def send_message(message: str, title=NOTIFY_MESSAGE_TITLE, icon='battery_std'):
     termux_api_call(
         message,
         title=title,
@@ -131,11 +133,13 @@ def send_status(
         t = remaining_time
         st = calendar.timegm(t)
         if st >= 86400:
-            title = '%d dia(s) e %d h restantes' % (t.tm_mday, t.tm_hour)
+            title = NOTIFY_BATTERY_STATUS_REMAINING_DAYS % (
+                t.tm_mday, t.tm_hour)
         elif st >= 3600:
-            title = '%d h e %d mins restantes' % (t.tm_hour, t.tm_min)
+            title = NOTIFY_BATTERY_STATUS_REMAINING_HOURS % (
+                t.tm_hour, t.tm_min)
         elif st >= 60:
-            title = '%d min e %d s restantes' % (t.tm_min, t.tm_sec)
+            title = NOTIFY_BATTERY_STATUS_REMAINING_MINS % (t.tm_min, t.tm_sec)
 
     termux_api_call(
         message,
