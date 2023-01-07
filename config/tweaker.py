@@ -20,7 +20,7 @@
 #  USA
 
 # Utilizado pelos módulos:
-# -> eventloop, events
+# -> eventloop, events, service
 
 import json
 import logging

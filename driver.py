@@ -20,7 +20,7 @@
 #  USA
 
 # Utilizado pelos módulos:
-# -> events.py
+# -> events
 
 import json
 import os

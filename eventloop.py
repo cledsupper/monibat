@@ -25,7 +25,6 @@
 import sys
 import time
 
-from data.messages import *
 from events import *
 
 

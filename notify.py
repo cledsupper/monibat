@@ -20,7 +20,7 @@
 #  USA
 
 # Utilizado pelos módulos:
-# -> events.py
+# -> events
 
 
 import subprocess
@@ -112,7 +112,7 @@ def send_status(
     if btweaks['status'] == 'Charging':
         icon = 'battery_charging_full'
     elif btweaks['level'] == 'Low' or btweaks['level'] == 'Critical':
-            icon = 'battery_alert'
+        icon = 'battery_alert'
 
     if btweaks['scale'] is None or btweaks['status'] == 'Charging':
         message = '%d %% (%0.2f A) | 🌡 %0.1f °C' % (
