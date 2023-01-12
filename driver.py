@@ -116,7 +116,7 @@ class Battery:
 
     def capacity(self) -> Optional[float]:
         """Retorna a capacidade estimada da bateria em Watts ou Amperes"""
-        if self._td_cap:
+        if self._td_up:
             return self._td_cap / 1000
         return None
 
@@ -126,7 +126,7 @@ class Battery:
 
     def energy_now(self) -> Optional[float]:
         """Retorna o nível de carga da bateria em Watts ou Amperes"""
-        if self._td_eng:
+        if self._td_up:
             return self._td_eng / 1000
         return None
 
@@ -193,7 +193,7 @@ class Battery:
             i = time.perf_counter()
 
             # mA*s -> mA*h: s/3600
-            self._td_eng += cur*(DRIVER_SLEEP+(i-pi))/3600
+            self._td_eng += cur*(i-pi)/3600
             self._td_eng_lock.release()
 
             time.sleep(DRIVER_SLEEP)
