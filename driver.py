@@ -177,18 +177,19 @@ class Battery:
         self._td_eng_lock.release()
         self._td_up = True
 
-        i = 0.0
+        i = time.perf_counter()
+        pi = i
         while self._td_up:
-            i = time.perf_counter()
             cur = self.current_now()
             self._td_eng_lock.acquire()
-            i = time.perf_counter() - i
+            i = time.perf_counter()
 
             # mA*s -> mA*h: s/3600
-            self._td_eng += cur*(DRIVER_SLEEP+i)/3600
+            self._td_eng += cur*(DRIVER_SLEEP+(i-pi))/3600
             self._td_eng_lock.release()
 
             time.sleep(DRIVER_SLEEP)
+            pi = i
 
     def start_emulating_cap(self, cap: float, perc_start: int = LEVEL_LOW):
         if self._td_up:
