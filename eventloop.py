@@ -142,7 +142,15 @@ def iterate():
         if not notify.status_shown or cfg.btweaks["status"] != "Not charging":
             remaining_time = calc_remaining_time()
             notify.send_status(cfg.btweaks, remaining_time)
+
         cfg.update()
+        if cfg.data["capacity"]:
+            cfg.batt.start_emulating_cap(
+                cfg.data["capacity"],
+                perc_start=cfg.btweaks["percent"]
+            )
+        else:
+            cfg.batt.stop_emulating_cap()
 
     time.sleep(cfg.delay)
 

@@ -44,6 +44,7 @@ class Configuration():
         self.chg_perc = None
         self.chg_time = None
 
+        self.calibrated = CALIBRATION_STATE_NONE
         self.calibrate = False
         self.calibrate_aux = 0.0
 
@@ -92,6 +93,9 @@ class Configuration():
             capacity = settings.get('capacity', None)
             if capacity is not None:
                 assert isinstance(capacity, float)
+                self.calibrated = CALIBRATION_STATE_FINAL
+            else:
+                self.calibrated = CALIBRATION_STATE_NONE
 
             design = settings.get(
                 'capacity_design',

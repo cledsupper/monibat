@@ -41,7 +41,40 @@ if cfg.data["capacity"]:
 cfg.delay = DELAY_CHARGING if cfg.batt.charging() else DELAY_DISCHARGING
 
 
-def recalibrate_start():
+def recalibrate_start(lp):
+    """Início do processo de calibração."""
+    cfg.calibrate = True
+    cfg.calibrate_aux = (lp * cfg.data["capacity"])/100
+
+    notify.send_message(
+        EVENTS_RECALIBRATE_START_MESSAGE,
+        title=EVENTS_RECALIBRATE_START_TITLE,
+        icon='battery_alert'
+    )
+    return cfg.data["capacity"]
+
+
+def recalibrate_finish():
+    cfg.calibrate = False
+    cfg.calibrated = CALIBRATION_STATE_FINAL
+    cfg.save()
+    notify.send_message(
+        EVENTS_RECALIBRATE_FINISH_MESSAGE % (cfg.data["capacity"]),
+        title=EVENTS_RECALIBRATE_FINISH_TITLE
+    )
+    return True
+
+
+def recalibrate_partial(dp):
+    """Quando já foi obtida uma estimativa de capacidade e detectou-se erro, corrigir."""
+    cap = cfg.data["capacity"]
+    cap = cap*(1+dp/100)
+    cfg.data["capacity"] = cap
+    recalibrate_finish()
+    return cap
+
+
+def recalibrate_on_discharge():
     """Ação para calibrar a bateria quando da tensão discrepante à carga."""
     if cfg.calibrate or not (cfg.batt._td_up and cfg.btweaks["status"] == 'Discharging'):
         return False
@@ -53,45 +86,43 @@ def recalibrate_start():
     vtyp = str(cfg.data["voltage"]["typ"])
     p = cfg.btweaks["percent"]
     lp = LEVEL_LOW_BY_VOLTAGE_TYP[vtyp]
+    dp = lp-p
 
-    if (v >= lv-0.05 and v < lv) and abs(p-lp) >= 5:
-        cfg.calibrate = True
-        cfg.batt.stop_emulating_cap()
-        cfg.batt.start_emulating_cap(
-            cfg.data["capacity"],
-            perc_start=lp
-        )
-        cfg.calibrate_aux = (lp * cfg.data["capacity"])/100
+    if (v >= lv-0.02 and v < lv):
+        if abs(dp) >= 5:
+            cap = cfg.data["capacity"]
+            if not cfg.calibrate and cfg.calibrated != CALIBRATION_STATE_FINAL:
+                cap = recalibrate_start(lp)
+            elif cfg.calibrated == CALIBRATION_STATE_PARTIAL:
+                cap = recalibrate_partial(dp)
 
-        notify.send_message(
-            EVENTS_RECALIBRATE_START_MESSAGE,
-            title=EVENTS_RECALIBRATE_START_TITLE,
-            icon='battery_alert'
-        )
-        return True
+            cfg.batt.stop_emulating_cap()
+            cfg.batt.start_emulating_cap(cap, perc_start=lp)
+            return True
+
+        elif cfg.calibrated == CALIBRATION_STATE_PARTIAL:
+            return recalibrate_finish()
 
     return False
 
 
-def recalibrate_finish():
+def recalibrate_on_full():
     if not cfg.calibrate:
         return False
 
-    cfg.calibrate = False
+    cfg.calibrated = CALIBRATION_STATE_PARTIAL
     vtyp = str(cfg.data["voltage"]["typ"])
     low = LEVEL_LOW_BY_VOLTAGE_TYP[vtyp]
     chgd = cfg.btweaks["energy"] - cfg.calibrate_aux
-    cfg.data["capacity"] = chgd / \
-        (float(100 - low)/100.0)
-    cfg.save()
+    cfg.data["capacity"] = chgd / (float(100 - low)/100.0)
     cfg.batt.stop_emulating_cap()
     cfg.batt.start_emulating_cap(
         cfg.data["capacity"],
         perc_start=100
     )
     notify.send_message(
-        EVENTS_RECALIBRATE_FINISH_MESSAGE % (cfg.data["capacity"]),
-        title=EVENTS_RECALIBRATE_FINISH_TITLE
+        EVENTS_RECALIBRATE_PARTIAL_MESSAGE % (low),
+        title=EVENTS_RECALIBRATE_PARTIAL_TITLE
     )
     return True
 
@@ -115,7 +146,7 @@ def on_percent_increase(delta: int):
 
 
 def on_percent_decrease(delta: int):
-    if recalibrate_start():
+    if recalibrate_on_discharge():
         return
 
     percent = cfg.btweaks["percent"]
@@ -140,7 +171,7 @@ def on_voltage_increase(delta: int):
 
 
 def on_voltage_decrease(delta: int):
-    recalibrate_start()
+    recalibrate_on_discharge()
 
 
 def on_temp_increase(delta: int):
@@ -207,9 +238,8 @@ def on_status_change(from_status: str):
             notify.send_toast(EVENTS_ALARM_STATUS_CONNECTED)
     elif cfg.btweaks["status"] == 'Full':
         cfg.delay = DELAY_DISCHARGING
-        if not recalibrate_finish() and cfg.batt._td_up:
-            if int(cfg.btweaks["capacity"]*1000) != int(cfg.btweaks["energy"]*1000):
-                cfg.batt.reset_cap()
+        if not recalibrate_on_full() and cfg.batt._td_up:
+            cfg.batt.reset_cap()
     else:
         cfg.delay = DELAY_DISCHARGING
         if cfg.btweaks['status'] == 'Discharging':

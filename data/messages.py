@@ -29,8 +29,11 @@ TWEAKER_CFG_SAVE_FAILED = 'falha ao salvar configuração!'
 
 EVENTS_ADB_CHECK_WARNING = 'Verificão da depuração ADB pode levar %d segs'
 
-EVENTS_RECALIBRATE_START_MESSAGE = 'carregue a bateria completamente para concluir'
+EVENTS_RECALIBRATE_START_MESSAGE = 'carregue a bateria completamente para continuar'
 EVENTS_RECALIBRATE_START_TITLE = 'calibração da bateria iniciada ℹ'
+
+EVENTS_RECALIBRATE_PARTIAL_MESSAGE = 'descarregue a bateria até %d %%'
+EVENTS_RECALIBRATE_PARTIAL_TITLE = 'calibração final da bateria ℹ'
 
 EVENTS_RECALIBRATE_FINISH_MESSAGE = 'resultado: %0.2f Ah'
 EVENTS_RECALIBRATE_FINISH_TITLE = 'bateria calibrada! ✅'
