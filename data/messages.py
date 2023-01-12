@@ -27,7 +27,7 @@ TWEAKER_CFG_READ_FAILED = 'erro de config., cód.: %d'
 
 TWEAKER_CFG_SAVE_FAILED = 'falha ao salvar configuração!'
 
-EVENTS_ADB_CHECK_WARNING = 'Verificão da depuração ADB pode levar %d min'
+EVENTS_ADB_CHECK_WARNING = 'Verificão da depuração ADB pode levar %d segs'
 
 EVENTS_RECALIBRATE_START_MESSAGE = 'carregue a bateria completamente para concluir'
 EVENTS_RECALIBRATE_START_TITLE = 'calibração da bateria iniciada ℹ'
@@ -55,7 +55,8 @@ EVENTS_ALARM_STATUS_CONNECTED = 'O conector foi conectado 🔌🔋'
 EVENTS_ALARM_STATUS_DISCONNECTED = 'O conector foi desconectado 🔋'
 
 NOTIFY_BATTERY_STATUS_TITLE = 'estado da bateria'
-NOTIFY_BATTERY_STATUS_BUTTON_RESTART = 'reiniciar/15 %'
+NOTIFY_BATTERY_STATUS_BUTTON_RECALIBRATE = 'reiniciar/15%'
+NOTIFY_BATTERY_STATUS_BUTTON_RESTART = 'reiniciar'
 NOTIFY_BATTERY_STATUS_BUTTON_EXIT = 'encerrar'
 NOTIFY_BATTERY_STATUS_REMAINING_DAYS = '%d dia(s) e %d h restantes'
 NOTIFY_BATTERY_STATUS_REMAINING_HOURS = '%d h e %d mins restantes'

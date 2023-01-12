@@ -25,15 +25,19 @@
 import driver
 from config.tweaker import *
 import notify
+import sys
 
 cfg = Configuration(notify.send_toast)
-notify.send_toast(EVENTS_ADB_CHECK_WARNING % (SUBPROCESS_TIMEOUT/60))
+notify.send_toast(EVENTS_ADB_CHECK_WARNING % (SUBPROCESS_TIMEOUT))
 cfg.batt = driver.Battery()
 if cfg.data["capacity"]:
-    cfg.batt.start_emulating_cap(
-        cfg.data["capacity"],
-        cfg.infer_percent(cfg.batt)
-    )
+    if len(sys.argv) > 1 and sys.argv[1].isdigit():
+        cfg.batt.start_emulating_cap(cfg.data["capacity"], int(sys.argv[1]))
+    else:
+        cfg.batt.start_emulating_cap(
+            cfg.data["capacity"],
+            cfg.infer_percent(cfg.batt)
+        )
 cfg.delay = DELAY_CHARGING if cfg.batt.charging() else DELAY_DISCHARGING
 
 

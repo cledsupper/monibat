@@ -22,7 +22,6 @@
 # Utilizado pelos módulos:
 # -> service
 
-import sys
 import time
 
 from events import *

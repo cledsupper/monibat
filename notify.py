@@ -28,7 +28,7 @@ import calendar
 import time
 from typing import Optional
 
-from config.constants import APP_NAME, APP_PID, APP_PY, LEVEL, SUBPROCESS_TIMEOUT
+from config.constants import APP_NAME, APP_PID, APP_PY, LEVEL, LEVEL_LOW, SUBPROCESS_TIMEOUT
 from data.messages import *
 
 subprocess.run(
@@ -52,6 +52,7 @@ def termux_api_call(
     message: str,
     icon='battery_std',
     title=NOTIFY_BATTERY_STATUS_TITLE,
+    perc=LEVEL_LOW,
     as_status=False,
     as_toast=False,
     as_error=False,
@@ -59,16 +60,21 @@ def termux_api_call(
 ):
     pars = ['--help']
     if as_status:
+        if perc < 0:
+            perc = 0
         pars = [
             '-i', 'batservice',
             '--icon', icon,
             '--ongoing', '--alert-once',
             '-t', '%s: %s' % (APP_NAME, title),
             '-c', message,
-            '--button1', NOTIFY_BATTERY_STATUS_BUTTON_RESTART, '--button1-action', 'python %s' % (
+            '--button1', NOTIFY_BATTERY_STATUS_BUTTON_RECALIBRATE, '--button1-action', 'python %s' % (
                 APP_PY),
-            '--button2', NOTIFY_BATTERY_STATUS_BUTTON_EXIT, '--button2-action', 'kill %d' % (
+            '--button2', NOTIFY_BATTERY_STATUS_BUTTON_RESTART, '--button2-action', 'python %s %d' % (
+                APP_PY, perc),
+            '--button3', NOTIFY_BATTERY_STATUS_BUTTON_EXIT, '--button3-action', 'kill %d' % (
                 APP_PID)
+
         ]
     else:
         pars = [
@@ -143,6 +149,7 @@ def send_status(
 
     termux_api_call(
         message,
+        perc=btweaks['percent']-1,
         icon=icon,
         title=title,
         as_status=True
