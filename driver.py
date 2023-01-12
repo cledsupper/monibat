@@ -65,11 +65,9 @@ class Battery:
             'plugged': 'UNPLUGGED'
         }
         self._td_up = False
-        self._td_cap = None
-        self._td_perc_start = float(LEVEL_LOW)
-        self._td_eng = None
+        self._td_cap = 0.0
+        self._td_eng = 0.0
         self._td_eng_lock = threading.Lock()
-        self._td = None
         self.check_call()
 
     def check_call(self):
@@ -118,7 +116,9 @@ class Battery:
 
     def capacity(self) -> Optional[float]:
         """Retorna a capacidade estimada da bateria em Watts ou Amperes"""
-        return self._td_cap
+        if self._td_cap:
+            return self._td_cap / 1000
+        return None
 
     def capacity_design(self) -> Optional[float]:
         """Retorna a capacidade típica da bateria em Watts ou Amperes"""
@@ -126,7 +126,13 @@ class Battery:
 
     def energy_now(self) -> Optional[float]:
         """Retorna o nível de carga da bateria em Watts ou Amperes"""
-        return self._td_eng
+        if self._td_eng:
+            return self._td_eng / 1000
+        return None
+
+    def current_now_milis(self) -> float:
+        """Retorna a velocidade da (des)carga em mA"""
+        return self._get_sp_data('current')
 
     def current_now(self) -> Optional[float]:
         """Retorna a velocidade da (des)carga em Watts ou Amperes"""
@@ -138,7 +144,7 @@ class Battery:
 
     def voltage(self) -> Optional[float]:
         """Tensão da bateria (V)"""
-        value = None
+        value = 0.0
         if Battery.HAVE_ADB:
             try:
                 proc = subprocess.run(
@@ -153,7 +159,9 @@ class Battery:
                 value = float(value)/1000000.0
             except:
                 pass
-        return value
+        if value:
+            return value
+        return None
 
     def health(self) -> Optional[str]:
         """Saúde da bateria"""
@@ -170,9 +178,9 @@ class Battery:
         value = to_linux_str(value)
         return value
 
-    def _cap_thread(self, cap: float):
+    def _emulator(self, perc_start: int, cap: float):
         self._td_eng_lock.acquire()
-        self._td_eng = self._td_perc_start * cap / 100
+        self._td_eng = perc_start * cap / 100
         self._td_cap = cap
         self._td_eng_lock.release()
         self._td_up = True
@@ -180,7 +188,7 @@ class Battery:
         i = time.perf_counter()
         pi = i
         while self._td_up:
-            cur = self.current_now()
+            cur = self.current_now_milis()
             self._td_eng_lock.acquire()
             i = time.perf_counter()
 
@@ -192,10 +200,20 @@ class Battery:
             pi = i
 
     def start_emulating_cap(self, cap: float, perc_start: int = LEVEL_LOW):
+        """
+        Inicia o emulador do MoniBat.
+
+        ### Parâmetro obrigatório:
+         - cap [float]: capacidade em Ah;
+        ### Parâmetro opcional:
+         - perc_start [int]: percentual para iniciar o emulador, como por exemplo: 50 (%).
+        """
         if self._td_up:
             return
         self._td_perc_start = float(perc_start)
-        self._td = threading.Thread(target=self._cap_thread, args=(cap,))
+        cap *= 1000  # conversão para mAh
+        self._td = threading.Thread(
+            target=self._emulator, args=(perc_start, cap,))
         self._td.start()
 
     def reset_cap(self):
@@ -211,7 +229,7 @@ class Battery:
 
 if __name__ == '__main__':
     battery = Battery()
-    battery.start_emulating_cap(2.0)
+    battery.start_emulating_cap(2.0, 50)
     time.sleep(7)
     eng = battery.energy_now()
     assert isinstance(eng, float)
