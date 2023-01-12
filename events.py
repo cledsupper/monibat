@@ -103,6 +103,9 @@ def recalibrate_on_discharge():
         elif cfg.calibrated == CALIBRATION_STATE_PARTIAL:
             return recalibrate_finish()
 
+    elif abs(dp) < 5 and cfg.calibrated == CALIBRATION_STATE_PARTIAL:
+        return recalibrate_finish()
+
     return False
 
 
