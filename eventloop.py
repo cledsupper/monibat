@@ -143,7 +143,7 @@ def iterate():
             remaining_time = calc_remaining_time()
             notify.send_status(cfg.btweaks, remaining_time)
 
-        cfg.update()
+    if cfg.update():
         if cfg.data["capacity"]:
             cfg.batt.start_emulating_cap(
                 cfg.data["capacity"],

@@ -94,6 +94,7 @@ TEMP_MAX = 55.0
 DEFAULT_SETTINGS = {
     "capacity": 0.0,
     "capacity_design": 0.0,
+    "infer_percent_always": False,
     "percent": {
         "empty": LEVEL_EMPTY,
         "full": LEVEL_FULL,
@@ -117,5 +118,6 @@ DEFAULT_SETTINGS = {
 }
 
 CALIBRATION_STATE_NONE = 0
-CALIBRATION_STATE_PARTIAL = 1
-CALIBRATION_STATE_FINAL = 2
+CALIBRATION_STATE_START = 1
+CALIBRATION_STATE_PARTIAL = 2
+CALIBRATION_STATE_FINAL = 3

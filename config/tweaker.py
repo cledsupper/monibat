@@ -30,6 +30,13 @@ from config.constants import *
 from data.messages import *
 
 
+def percent_abs(p: int) -> int:
+    if p > 100:
+        return 100
+    elif p < 0:
+        return 0
+    return p
+
 class Configuration():
     def __init__(self, toast_cb=None):
         self.data = DEFAULT_SETTINGS
@@ -45,7 +52,6 @@ class Configuration():
         self.chg_time = None
 
         self.calibrated = CALIBRATION_STATE_NONE
-        self.calibrate = False
         self.calibrate_aux = 0.0
 
         self._updated_at = 0
@@ -59,19 +65,22 @@ class Configuration():
         try:
             mt = os.path.getmtime(FCONFIG)
             if mt <= self._updated_at:
-                return
+                return False
             with open(FCONFIG, 'r') as file:
                 data = json.load(file)
                 errcode = self.valid_settings(data)
                 self._updated_at = mt
         except FileNotFoundError:
-            return
+            return False
+        except:
+            errcode = -1
 
         if self._sender:
             if errcode == 0:
                 self._sender(TWEAKER_CFG_READ_SUCCESS)
             else:
                 self._sender(TWEAKER_CFG_READ_FAILED % (errcode))
+        return errcode > -1
 
     def save(self):
         err = None
@@ -93,9 +102,10 @@ class Configuration():
             capacity = settings.get('capacity', None)
             if capacity is not None:
                 assert isinstance(capacity, float)
-                self.calibrated = CALIBRATION_STATE_FINAL
-            else:
+            if not capacity:
                 self.calibrated = CALIBRATION_STATE_NONE
+            else:
+                self.calibrated = CALIBRATION_STATE_FINAL
 
             design = settings.get(
                 'capacity_design',
@@ -108,6 +118,8 @@ class Configuration():
         except AssertionError:
             errcode = 1
 
+        infer = settings.get("infer_percent_always", False)
+        self.data['infer_percent_always'] = bool(infer)
         try:
             percent = settings.get('percent', DEFAULT_SETTINGS['percent'])
             assert isinstance(percent, dict)
@@ -183,8 +195,36 @@ class Configuration():
 
         return errcode
 
+    def _percent_by_voltage(self, btweaks: dict) -> Optional[int]:
+        v = btweaks["voltage"]
+        if not v:
+            return None
+
+        status = btweaks["status"]
+        vtyp = str(self.data["voltage"]["typ"])
+        low = LEVEL_LOW_BY_VOLTAGE_TYP[vtyp]
+        vmax = self.data["voltage"]["full"]
+        vmin = self.data["voltage"]["empty"]
+        vhigh = self.data["voltage"]["high"]
+        vlow = self.data["voltage"]["low"]
+        if status == 'Discharging':
+            if v >= vlow:
+                p = (v - vlow)/(vhigh - vlow)
+                p = (100-low)*p + low
+            else:
+                p = (v - vmin)/(vlow - vmin)
+                p = low*p
+        else:
+            p = 100*(v - vlow)/(vmax - vlow)
+        return int(p)
+
     def fix_percent(self, btweaks: dict) -> int:
-        """Corrige o percentual da bateria através dos valores mínimo e máximo definidos na configuração."""
+        """Corrige o percentual da bateria pela tensão ou por limites de menor e maior percentual de carga."""
+        if self.data.get('infer_percent_always', False):
+            p = self._percent_by_voltage(btweaks)
+            if p:
+                return percent_abs(p)
+
         p = btweaks['percent']
 
         if self.data['percent']['fix']:
@@ -193,12 +233,7 @@ class Configuration():
             p = (p-lmin)/(lmax-lmin)
             p = int(p*100)
 
-        if p > 100:
-            p = 100
-        elif p < 0:
-            p = 0
-
-        return p
+        return percent_abs(p)
 
     def fix_status(self, btweaks: dict) -> str:
         """Corrige o status da bateria segundo a corrente de (des)carga em certas condições."""
@@ -219,32 +254,15 @@ class Configuration():
         """Infere o percentual da bateria em várias condições pressupostas."""
         status = driver.status()
         v = driver.voltage()
-        vtyp = str(self.data["voltage"]["typ"])
-        low = LEVEL_LOW_BY_VOLTAGE_TYP[vtyp]
         if status == 'Full':
             return 100
         elif v:
-            vmax = self.data["voltage"]["full"]
-            vmin = self.data["voltage"]["empty"]
-            vhigh = self.data["voltage"]["high"]
-            vlow = self.data["voltage"]["low"]
-            if status == 'Discharging':
-                if v >= vlow:
-                    p = (v - vlow)/(vhigh - vlow)
-                    p = (100-low)*p + low
-                else:
-                    p = (v - vmin)/(vlow - vmin)
-                    p = low*p
-            else:
-                p = 100*(v - vlow)/(vmax - vlow)
-
-            p = int(p)
-            if p > 100:
-                p = 100
-            elif p < 0:
-                p = 0
-            return p
-        self.calibrate = True
+            btweaks = {
+                "status": status,
+                "voltage": v
+            }
+            return percent_abs(self._percent_by_voltage(btweaks))
+        self.calibrated = CALIBRATION_STATE_START
         self.calibrate_aux = (low * self.data["capacity"]) / 100
         return low
 

@@ -153,7 +153,7 @@ class Battery:
                     ),
                     capture_output=True,
                     check=True,
-                    timeout=DRIVER_SLEEP
+                    timeout=1
                 )
                 value = int(proc.stdout.decode().strip())
                 value = float(value)/1000000.0

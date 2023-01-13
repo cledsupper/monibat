@@ -43,7 +43,7 @@ cfg.delay = DELAY_CHARGING if cfg.batt.charging() else DELAY_DISCHARGING
 
 def recalibrate_start(lp):
     """Início do processo de calibração."""
-    cfg.calibrate = True
+    cfg.calibrated = CALIBRATION_STATE_START
     cfg.calibrate_aux = (lp * cfg.data["capacity"])/100
 
     notify.send_message(
@@ -55,7 +55,6 @@ def recalibrate_start(lp):
 
 
 def recalibrate_finish():
-    cfg.calibrate = False
     cfg.calibrated = CALIBRATION_STATE_FINAL
     cfg.save()
     notify.send_message(
@@ -76,7 +75,9 @@ def recalibrate_partial(dp):
 
 def recalibrate_on_discharge():
     """Ação para calibrar a bateria quando da tensão discrepante à carga."""
-    if cfg.calibrate or not (cfg.batt._td_up and cfg.btweaks["status"] == 'Discharging'):
+    if cfg.calibrated == CALIBRATION_STATE_START:
+        return False
+    elif not (cfg.batt._td_up and cfg.btweaks["status"] == 'Discharging'):
         return False
 
     v = cfg.btweaks["voltage"]
@@ -91,7 +92,7 @@ def recalibrate_on_discharge():
     if (v >= lv-0.02 and v < lv):
         if abs(dp) >= 5:
             cap = cfg.data["capacity"]
-            if not cfg.calibrate and cfg.calibrated != CALIBRATION_STATE_FINAL:
+            if cfg.calibrated == CALIBRATION_STATE_NONE:
                 cap = recalibrate_start(lp)
             elif cfg.calibrated == CALIBRATION_STATE_PARTIAL:
                 cap = recalibrate_partial(dp)
@@ -110,14 +111,15 @@ def recalibrate_on_discharge():
 
 
 def recalibrate_on_full():
-    if not cfg.calibrate:
+    if cfg.calibrated != CALIBRATION_STATE_START:
         return False
-
     cfg.calibrated = CALIBRATION_STATE_PARTIAL
+
     vtyp = str(cfg.data["voltage"]["typ"])
     low = LEVEL_LOW_BY_VOLTAGE_TYP[vtyp]
     chgd = cfg.btweaks["energy"] - cfg.calibrate_aux
     cfg.data["capacity"] = chgd / (float(100 - low)/100.0)
+    cfg.save()
     cfg.batt.stop_emulating_cap()
     cfg.batt.start_emulating_cap(
         cfg.data["capacity"],
@@ -237,15 +239,10 @@ def on_temp_decrease(delta: int):
 def on_status_change(from_status: str):
     if cfg.btweaks['status'] == 'Charging':
         cfg.delay = DELAY_CHARGING
-        if from_status == 'Not charging' or from_status == 'Full':
-            notify.send_toast(EVENTS_ALARM_STATUS_CONNECTED)
     elif cfg.btweaks["status"] == 'Full':
         cfg.delay = DELAY_DISCHARGING
         if not recalibrate_on_full() and cfg.batt._td_up:
             cfg.batt.reset_cap()
     else:
         cfg.delay = DELAY_DISCHARGING
-        if cfg.btweaks['status'] == 'Discharging':
-            if from_status == 'Full' or from_status == 'Charging':
-                notify.send_toast(EVENTS_ALARM_STATUS_DISCONNECTED)
     cfg.reset_alarms()
