@@ -37,6 +37,7 @@ def percent_abs(p: int) -> int:
         return 0
     return p
 
+
 class Configuration():
     def __init__(self, toast_cb=None):
         self.data = DEFAULT_SETTINGS
@@ -262,6 +263,8 @@ class Configuration():
                 "voltage": v
             }
             return percent_abs(self._percent_by_voltage(btweaks))
+        vtyp = str(self.data["voltage"]["typ"])
+        low = LEVEL_LOW_BY_VOLTAGE_TYP[vtyp]
         self.calibrated = CALIBRATION_STATE_START
         self.calibrate_aux = (low * self.data["capacity"]) / 100
         return low
