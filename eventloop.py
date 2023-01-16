@@ -170,7 +170,5 @@ def handle_sigterm(sig, frame):
         os.remove(FPID)
     except FileNotFoundError:
         pass
-        sys.stderr = sys.o_stderr
-    sys.stderr = sys.o_stderr
     cleanup()
     exit(0)

@@ -62,6 +62,8 @@ def termux_api_call(
     if as_status:
         if perc < 0:
             perc = 0
+        elif perc >= 100:
+            perc = 100
         pars = [
             '-i', 'batservice',
             '--icon', icon,

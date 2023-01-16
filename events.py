@@ -42,7 +42,7 @@ cfg.delay = DELAY_CHARGING if cfg.batt.charging() else DELAY_DISCHARGING
 
 
 def recalibrate_start(lp):
-    """Início do processo de calibração."""
+    """Início do processo de calibração: marca o emulador em nível padrão de baixa tensão conforme a tensão nominal da bateria."""
     cfg.calibrated = CALIBRATION_STATE_START
     cfg.calibrate_aux = (lp * cfg.data["capacity"])/100
 
@@ -55,6 +55,7 @@ def recalibrate_start(lp):
 
 
 def recalibrate_finish():
+    """Passo final para salvar a capacidade real (utilizável) da bateria."""
     cfg.calibrated = CALIBRATION_STATE_FINAL
     cfg.save()
     notify.send_message(
@@ -65,7 +66,7 @@ def recalibrate_finish():
 
 
 def recalibrate_partial(dp):
-    """Quando já foi obtida uma estimativa de capacidade e detectou-se erro, corrigir."""
+    """Quando já foi obtida uma estimativa de capacidade real e se obteve um erro, corrigir."""
     cap = cfg.data["capacity"]
     cap = cap*(1+dp/100)
     cfg.data["capacity"] = cap
@@ -111,6 +112,7 @@ def recalibrate_on_discharge():
 
 
 def recalibrate_on_full():
+    """Passo da calibração parcial da bateria: estima a capacidade real após a carga completa desde a baixa tensão."""
     if cfg.calibrated != CALIBRATION_STATE_START:
         return False
     cfg.calibrated = CALIBRATION_STATE_PARTIAL
