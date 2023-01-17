@@ -265,7 +265,7 @@ class Configuration():
             return percent_abs(self._percent_by_voltage(btweaks))
         vtyp = str(self.data["voltage"]["typ"])
         low = LEVEL_LOW_BY_VOLTAGE_TYP[vtyp]
-        self.calibrated = CALIBRATION_STATE_START
+        self.calibrated = CALIBRATION_STATE_MANUAL
         self.calibrate_aux = (low * self.data["capacity"]) / 100
         return low
 

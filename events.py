@@ -91,7 +91,7 @@ def recalibrate_on_discharge():
     dp = lp-p
 
     if (v >= lv-0.02 and v < lv):
-        if abs(dp) >= 5:
+        if abs(dp) >= CALIBRATION_MAX_ERROR:
             cap = cfg.data["capacity"]
             if cfg.calibrated == CALIBRATION_STATE_NONE:
                 cap = recalibrate_start(lp)
@@ -105,7 +105,7 @@ def recalibrate_on_discharge():
         elif cfg.calibrated == CALIBRATION_STATE_PARTIAL:
             return recalibrate_finish()
 
-    elif abs(dp) < 5 and cfg.calibrated == CALIBRATION_STATE_PARTIAL:
+    elif abs(dp) < CALIBRATION_MAX_ERROR and cfg.calibrated == CALIBRATION_STATE_PARTIAL:
         return recalibrate_finish()
 
     return False
@@ -113,24 +113,28 @@ def recalibrate_on_discharge():
 
 def recalibrate_on_full():
     """Passo da calibração parcial da bateria: estima a capacidade real após a carga completa desde a baixa tensão."""
-    if cfg.calibrated != CALIBRATION_STATE_START:
+    if (cfg.calibrated & CALIBRATION_STATE_START) != 1:
         return False
-    cfg.calibrated = CALIBRATION_STATE_PARTIAL
 
     vtyp = str(cfg.data["voltage"]["typ"])
     low = LEVEL_LOW_BY_VOLTAGE_TYP[vtyp]
     chgd = cfg.btweaks["energy"] - cfg.calibrate_aux
     cfg.data["capacity"] = chgd / (float(100 - low)/100.0)
-    cfg.save()
     cfg.batt.stop_emulating_cap()
     cfg.batt.start_emulating_cap(
         cfg.data["capacity"],
         perc_start=100
     )
-    notify.send_message(
-        EVENTS_RECALIBRATE_PARTIAL_MESSAGE % (low),
-        title=EVENTS_RECALIBRATE_PARTIAL_TITLE
-    )
+    if cfg.calibrated == CALIBRATION_STATE_START:
+        cfg.calibrated = CALIBRATION_STATE_PARTIAL
+        cfg.save()
+        notify.send_message(
+            EVENTS_RECALIBRATE_PARTIAL_MESSAGE % (low),
+            title=EVENTS_RECALIBRATE_PARTIAL_TITLE
+        )
+    else:
+        cfg.data["capacity"] *= (1-CALIBRATION_MAX_ERROR/100)
+        recalibrate_finish()
     return True
 
 
