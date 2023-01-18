@@ -139,6 +139,22 @@ Se a sua bateria for velha (mais de um ano), tendo uma taxa de autodescarga elev
 6. Após aparecer a notificação de calibração concluída, religue o WiFi, reinicie o MoniBat e encerre o ADB com o comando "adb kill-server".
 
 
+### Apoie o desenvolvimento do aplicativo final
+
+Doe qualquer valor acima de R$ 9,99 com a mensagem "Leshto-Apps" para a chave aleatória abaixo:
+
+> 2db86f0d-bf5b-42ff-b34f-c32e2ff19a53
+
+```
+Confirme a conta:
+
+Instituição: RECARGAPAY IP LTDA
+Agência: 1
+Conta: 8144597458
+Nome: CLEDSON FERREIRA CAVALCANTI
+```
+
+
 [^1]: [termux-platform-tools](https://github.com/rendiix/termux-adb-fastboot)
 
 [^2]: O arquivo está localizado na pasta "samples" ou ainda, se o MoniBat já estiver instalado, "~/.config/MoniBat".
