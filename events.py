@@ -36,9 +36,9 @@ if cfg.data["capacity"]:
     else:
         cfg.batt.start_emulating_cap(
             cfg.data["capacity"],
-            cfg.infer_percent(cfg.batt)
+            cfg.infer_percent()
         )
-cfg.delay = DELAY_CHARGING if cfg.batt.charging() else DELAY_DISCHARGING
+cfg.delay = DELAY_CHARGING if cfg.batt.charging else DELAY_DISCHARGING
 
 
 def recalibrate_start(lp):

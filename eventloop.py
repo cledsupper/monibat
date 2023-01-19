@@ -30,21 +30,21 @@ from events import *
 def batt_refresh():
     batt = cfg.batt
     bd = {
-        "status": batt.status(),
-        "percent": batt.percent(),
-        "energy": batt.energy_now(),
-        "capacity": batt.capacity(),
-        "current": batt.current_now(),
-        "temp": batt.temp(),
-        "voltage": batt.voltage(),
-        "technology": batt.technology(),
-        "health": batt.health(),
+        "status": batt.status,
+        "percent": batt.percent,
+        "energy": batt.energy_now,
+        "capacity": batt.capacity,
+        "current": batt.current_now,
+        "temp": batt.temp,
+        "voltage": batt.voltage,
+        "technology": batt.technology,
+        "health": batt.health,
         "level": 'Normal',
         "scale": None
     }
 
-    if cfg.data["capacity_design"] and cfg.data["capacity_design"] != bd["capacity"]:
-        bd["scale"] = bd["capacity"] / cfg.data["capacity_design"]
+    if cfg.data["capacity"] and cfg.data["capacity_design"]:
+        bd["scale"] = cfg.data["capacity"] / cfg.data["capacity_design"]
 
     bd["percent"] = cfg.fix_percent(bd)
     bd["status"] = cfg.fix_status(bd)

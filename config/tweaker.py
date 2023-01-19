@@ -26,6 +26,7 @@ import json
 import logging
 from typing import Optional
 
+from batteryinterface import BatteryInterface
 from config.constants import *
 from data.messages import *
 
@@ -44,7 +45,7 @@ class Configuration():
 
         self.btweaks = {}
         self.delay = DELAY_CHARGING
-        self.batt = None
+        self.batt: BatteryInterface = None
         self.o_tnow = None
         self.tnow = None
         self.btweaks = None
@@ -251,10 +252,10 @@ class Configuration():
         """Corrige a saúde da bateria através da comparação entre a capacidade estimada e a capacidade real."""
         return btweaks['health']
 
-    def infer_percent(self, driver) -> int:
+    def infer_percent(self) -> int:
         """Infere o percentual da bateria em várias condições pressupostas."""
-        status = driver.status()
-        v = driver.voltage()
+        status = self.batt.status
+        v = self.batt.voltage
         if status == 'Full':
             return 100
         elif v:

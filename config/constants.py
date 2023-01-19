@@ -47,7 +47,7 @@ FCACHE = os.path.join(CACHE, 'logs.txt')
 FPID = os.path.join(CACHE, 'instance.pid')
 
 # Comando para obter o JSON com o estado da bateria
-BATTERY_DIRPATH = 'termux-battery-status'
+BATTERY_COMMAND = 'termux-battery-status'
 
 SUBPROCESS_TIMEOUT = 60
 

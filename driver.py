@@ -23,27 +23,27 @@
 # -> events
 
 import json
-import os
+import logging
 import shlex
 import subprocess
 import time
 import threading
-from typing import Optional
 
-from config.constants import BATTERY_DIRPATH, DRIVER_SLEEP, LEVEL_LOW, SUBPROCESS_TIMEOUT
+from config.constants import BATTERY_COMMAND, DRIVER_SLEEP, LEVEL_LOW, SUBPROCESS_TIMEOUT
+from batteryinterface import BatteryInterface
 
 
 def to_linux_str(termux_str: str) -> str:
     return termux_str[0] + termux_str[1:].lower().replace('_', ' ')
 
 
-class Battery:
+class Battery(BatteryInterface):
     """Classe Battery para acessar informações da bateria"""
 
     # NOTE: rendiix has an ADB fork for Galaxy devices which actually works
     HAVE_ADB = False
 
-    def __init__(self, dirpath: str = BATTERY_DIRPATH, check_unit: bool = True):
+    def __init__(self, command: str = BATTERY_COMMAND):
         try:
             subprocess.run(
                 shlex.split('adb wait-for-device'),
@@ -53,25 +53,22 @@ class Battery:
             Battery.HAVE_ADB = True
         except:
             pass
-        self._cmd = dirpath
-        self._unit_checked = check_unit
+        self._cmd = command
         self._sp_last_call = 0
-        self._sp_data = {
-            'percentage': -1,
-            'health': 'BAD',
-            'status': 'UNKNOWN',
-            'temperature': 0.0,
-            'current': 0.0,
-            'plugged': 'UNPLUGGED'
-        }
         self._td_up = False
         self._td_cap = 0.0
         self._td_eng = 0.0
         self._td_eng_lock = threading.Lock()
-        self.check_call()
 
-    def check_call(self):
+        # Default and non-refreshable values
+        self._unit = 'A'
+        self._capacity_design = None
+        self._technology = 'Li-ion'
+        self.refresh()
+
+    def refresh(self):
         """Pula múltiplas chamadas à Termux:API até um tempo específico: DRIVER_SLEEP."""
+        logging.log(0, "refreshing")
         tnow = time.time()
         td = tnow - self._sp_last_call
         if td < DRIVER_SLEEP:
@@ -87,62 +84,37 @@ class Battery:
                     timeout=SUBPROCESS_TIMEOUT
                 )
                 break
-            except subprocess.TimeoutExpired:
-                pass
+            except subprocess.TimeoutExpired as e:
+                logging.exception(e)
+                logging.error(
+                    " :::===::: CHILD PROCESS' ERROR OUTPUT :::===:::")
+                logging.error(e.stderr.decode() if e.stderr else '')
 
         text = proc.stdout
-        self._sp_data = json.loads(text)
-
-    def _get_sp_data(self, key: str):
-        """Retorna o dado solicitado pela verificação do tempo para atualização dos dados."""
-        self.check_call()
-        return self._sp_data[key]
-
-    def get_unit(self) -> str:
-        """Retorna a unidade ((A)mpère ou (W)atts) das medições de consumo elétrico."""
-        if not self._unit_checked:
-            self._unit_checked = True
-        return 'A'
-
-    def percent(self) -> int:
-        """Nível de carga da bateria em percentual"""
+        sp_data = json.loads(text)
         if self._td_up:
-            return 1+int(100 * self._td_eng / self._td_cap)
-        return self._get_sp_data('percentage')
+            self._percent = 1 + 100*(self._td_eng / self._td_cap)
+            self._capacity = self._td_cap
+            self._energy_now = self._td_eng
+        else:
+            self._percent = sp_data['percentage']
+            self._capacity = None
+            self._energy_now = None
+        self._charging = sp_data['status'] == 'CHARGING'
+        self._current_now = sp_data['current']/1000
+        self._current_now_milis = sp_data['current']
+        self._temp = sp_data['temperature']
+        self._voltage = self.adb_voltage()
+        self._health = to_linux_str(sp_data['health'])
+        self._status = to_linux_str(sp_data['status'])
 
-    def charging(self) -> bool:
-        """A bateria está carregando?"""
-        return self._get_sp_data('status') == 'CHARGING'
-
-    def capacity(self) -> Optional[float]:
-        """Retorna a capacidade estimada da bateria em Watts ou Amperes"""
-        if self._td_up:
-            return self._td_cap / 1000
-        return None
-
-    def capacity_design(self) -> Optional[float]:
-        """Retorna a capacidade típica da bateria em Watts ou Amperes"""
-        return None
-
-    def energy_now(self) -> Optional[float]:
-        """Retorna o nível de carga da bateria em Watts ou Amperes"""
-        if self._td_up:
-            return self._td_eng / 1000
-        return None
-
+    @property
     def current_now_milis(self) -> float:
         """Retorna a velocidade da (des)carga em mA"""
-        return self._get_sp_data('current')
+        self.refresh()
+        return self._current_now_milis
 
-    def current_now(self) -> Optional[float]:
-        """Retorna a velocidade da (des)carga em Watts ou Amperes"""
-        return self._get_sp_data('current') / 1000
-
-    def temp(self) -> Optional[float]:
-        """Temperatura da bateria (ºC)"""
-        return self._get_sp_data('temperature')
-
-    def voltage(self) -> Optional[float]:
+    def adb_voltage(self):
         """Tensão da bateria (V)"""
         value = 0.0
         if Battery.HAVE_ADB:
@@ -155,40 +127,25 @@ class Battery:
                     check=True,
                     timeout=1
                 )
-                value = int(proc.stdout.decode().strip())
-                value = float(value)/1000000.0
+                value = float(int(proc.stdout.decode().strip()))
+                value = value/1000000.0
             except:
                 pass
         if value:
             return value
         return None
 
-    def health(self) -> Optional[str]:
-        """Saúde da bateria"""
-        value = self._get_sp_data('health')
-        return to_linux_str(value)
-
-    def technology(self) -> Optional[str]:
-        """Tecnologia da bateria (Li-ion, Li-poly, etc.)"""
-        return None
-
-    def status(self) -> str:
-        """Status da bateria: Charging, Discharging, Unknown, ..."""
-        value = self._get_sp_data('status')
-        value = to_linux_str(value)
-        return value
-
-    def _emulator(self, perc_start: int, cap: float):
+    def _emulator(self, perc_start: float, cap: float):
         self._td_eng_lock.acquire()
-        self._td_eng = perc_start * cap / 100
+        self._td_eng = perc_start * cap
         self._td_cap = cap
-        self._td_eng_lock.release()
         self._td_up = True
+        self._td_eng_lock.release()
 
         i = time.perf_counter()
         pi = i
         while self._td_up:
-            cur = self.current_now_milis()
+            cur = self.current_now_milis
             self._td_eng_lock.acquire()
             i = time.perf_counter()
 
@@ -210,11 +167,14 @@ class Battery:
         """
         if self._td_up:
             return
-        self._td_perc_start = float(perc_start)
+        f_perc_start = float(perc_start)/100
         cap *= 1000  # conversão para mAh
         self._td = threading.Thread(
-            target=self._emulator, args=(perc_start, cap,))
+            target=self._emulator, args=(f_perc_start, cap,))
         self._td.start()
+        self._sp_last_call = 0
+        while not self._wait():
+            pass
 
     def reset_cap(self):
         self._td_eng_lock.acquire()
@@ -226,13 +186,16 @@ class Battery:
             self._td_up = False
             self._td.join()
 
+    def _wait(self):
+        self._td_eng_lock.acquire()
+        r = self._td_up
+        self._td_eng_lock.release()
+        return r
+
 
 if __name__ == '__main__':
     battery = Battery()
+    print(battery.percent)
     battery.start_emulating_cap(2.0, 50)
-    time.sleep(7)
-    eng = battery.energy_now()
-    assert isinstance(eng, float)
-    print('%0.2f' % (eng))
+    print(battery.current_now)
     battery.stop_emulating_cap()
-    print('End')
