@@ -188,6 +188,7 @@ class Battery(BatteryInterface):
             self._td.join()
 
     def done(self):
+        r = self._td_up
         if r:
             return r
         self._td_eng_lock.acquire()
