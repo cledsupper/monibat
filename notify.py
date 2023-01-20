@@ -98,8 +98,12 @@ def termux_api_call(
                 ['termux-toast', '-g', 'top', '%s: %s' % (APP_NAME, message)],
                 timeout=SUBPROCESS_TIMEOUT
             )
-    except:
-        pass
+    except subprocess.SubprocessError as e:
+        logging.exception(e)
+        logging.error(" :::===::: CHILD PROCESS' ERROR OUTPUT :::===:::")
+        logging.error(e.stderr.decode() if e.stderr else '')
+        logging.error(" :===: END OF CHILD PROCESS' ERROR OUTPUT :===:")
+
     if as_fatal:
         raise RuntimeError('FATAL: %s' % (message))
 

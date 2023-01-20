@@ -68,7 +68,6 @@ class Battery(BatteryInterface):
 
     def refresh(self):
         """Pula múltiplas chamadas à Termux:API até um tempo específico: DRIVER_SLEEP."""
-        logging.log(0, "refreshing")
         tnow = time.time()
         td = tnow - self._sp_last_call
         if td < DRIVER_SLEEP:
@@ -84,11 +83,12 @@ class Battery(BatteryInterface):
                     timeout=SUBPROCESS_TIMEOUT
                 )
                 break
-            except subprocess.TimeoutExpired as e:
+            except subprocess.SubprocessError as e:
                 logging.exception(e)
                 logging.error(
                     " :::===::: CHILD PROCESS' ERROR OUTPUT :::===:::")
                 logging.error(e.stderr.decode() if e.stderr else '')
+                logging.error(" :===: END OF CHILD PROCESS' ERROR OUTPUT :===:")
 
         text = proc.stdout
         sp_data = json.loads(text)
@@ -173,7 +173,7 @@ class Battery(BatteryInterface):
             target=self._emulator, args=(f_perc_start, cap,))
         self._td.start()
         self._sp_last_call = 0
-        while not self._wait():
+        while not self.done():
             pass
 
     def reset_cap(self):
@@ -186,7 +186,7 @@ class Battery(BatteryInterface):
             self._td_up = False
             self._td.join()
 
-    def _wait(self):
+    def done(self):
         self._td_eng_lock.acquire()
         r = self._td_up
         self._td_eng_lock.release()
