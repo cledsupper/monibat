@@ -76,7 +76,7 @@ def recalibrate_partial(dp):
 
 def recalibrate_on_discharge():
     """Ação para calibrar a bateria quando da tensão discrepante à carga."""
-    if cfg.calibrated == CALIBRATION_STATE_START:
+    if (cfg.calibrated & CALIBRATION_STATE_START) == 1:
         return False
     elif not (cfg.batt._td_up and cfg.btweaks["status"] == 'Discharging'):
         return False
@@ -114,6 +114,9 @@ def recalibrate_on_discharge():
 def recalibrate_on_full():
     """Passo da calibração parcial da bateria: estima a capacidade real após a carga completa desde a baixa tensão."""
     if (cfg.calibrated & CALIBRATION_STATE_START) != 1:
+        return False
+    elif not cfg.batt._td_up:
+        cfg.calibrated = CALIBRATION_STATE_NONE
         return False
 
     vtyp = str(cfg.data["voltage"]["typ"])
