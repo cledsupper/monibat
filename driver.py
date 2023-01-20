@@ -88,7 +88,8 @@ class Battery(BatteryInterface):
                 logging.error(
                     " :::===::: CHILD PROCESS' ERROR OUTPUT :::===:::")
                 logging.error(e.stderr.decode() if e.stderr else '')
-                logging.error(" :===: END OF CHILD PROCESS' ERROR OUTPUT :===:")
+                logging.error(
+                    " :===: END OF CHILD PROCESS' ERROR OUTPUT :===:")
 
         text = proc.stdout
         sp_data = json.loads(text)
@@ -187,6 +188,8 @@ class Battery(BatteryInterface):
             self._td.join()
 
     def done(self):
+        if r:
+            return r
         self._td_eng_lock.acquire()
         r = self._td_up
         self._td_eng_lock.release()
