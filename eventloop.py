@@ -43,8 +43,10 @@ def batt_refresh():
         "scale": None
     }
 
-    if cfg.data["capacity"] and cfg.data["capacity_design"]:
-        bd["scale"] = cfg.data["capacity"] / cfg.data["capacity_design"]
+    C = cfg.data["capacity_design"]
+    c = cfg.data["capacity"]
+    if C and c != C:
+        bd["scale"] = c / C
 
     bd["percent"] = cfg.fix_percent(bd)
     bd["status"] = cfg.fix_status(bd)

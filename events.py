@@ -92,14 +92,19 @@ def recalibrate_on_discharge():
 
     if (v >= lv-0.02 and v < lv):
         if abs(dp) >= CALIBRATION_MAX_ERROR:
-            cap = cfg.data["capacity"]
+            current = abs(cfg.btweaks["current"])  # 0.1 A
+            capacity = cfg.btweaks["capacity"]  # 4 Ah
+            c = current / capacity
+            if c < BATTERY_SAVE_C_MIN or c > BATTERY_SAVE_C_MAX:
+                return False
+
             if cfg.calibrated == CALIBRATION_STATE_NONE:
-                cap = recalibrate_start(lp)
+                capacity = recalibrate_start(lp)
             elif cfg.calibrated == CALIBRATION_STATE_PARTIAL:
-                cap = recalibrate_partial(dp)
+                capacity = recalibrate_partial(dp)
 
             cfg.batt.stop_emulating_cap()
-            cfg.batt.start_emulating_cap(cap, perc_start=lp)
+            cfg.batt.start_emulating_cap(capacity, perc_start=lp)
             return True
 
         elif cfg.calibrated == CALIBRATION_STATE_PARTIAL:
