@@ -258,4 +258,5 @@ def on_status_change(from_status: str):
             cfg.batt.reset_cap()
     else:
         cfg.delay = DELAY_DISCHARGING
-    cfg.reset_alarms()
+    if from_status != 'Not charging' and cfg.btweaks['status'] != 'Not charging':
+        cfg.reset_alarms()
