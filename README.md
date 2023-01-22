@@ -72,7 +72,7 @@ O processo de calibração foi idealizado apenas conforme a opção (b). No enta
     }
     ```
 
-Pack de baterias em paralelo (tensões diferentes das especificadas acima) não é suportado por padrão! no entanto, é possível adicionar o suporte ao duplicar e modificar uma linha do arquivo constants.py, o dicionário LEVEL_LOW_BY_VOLTAGE_TYP. Após isso, basta modificar o arquivo de configuração[^2] para as voltagens serem multiplicadas em duas, três ou mais células.
+Pack de baterias em série (isto é, que possuem tensões diferentes das especificadas acima) não é suportado por padrão! no entanto, é possível adicionar o suporte ao duplicar e modificar uma linha do arquivo constants.py, o dicionário LEVEL_LOW_BY_VOLTAGE_TYP. Após isso, basta modificar o arquivo de configuração[^2] para as voltagens serem multiplicadas em duas, três ou mais células.
 
 2. Execute o MoniBat. Ele vai mostrar um nível de bateria muito baixo (15, 20 ou 30 %), mas é INCORRETO.
 
