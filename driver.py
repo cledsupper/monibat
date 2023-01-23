@@ -96,7 +96,7 @@ class Battery(BatteryInterface):
         if self._td_up:
             self._percent = 1 + 100*(self._td_eng / self._td_cap)
             self._capacity = self._td_cap / 1000
-            self._energy_now = self._td_eng
+            self._energy_now = self._td_eng / 1000
         else:
             self._percent = sp_data['percentage']
             self._capacity = None

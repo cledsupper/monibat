@@ -65,6 +65,8 @@ def termux_api_call(
             perc = 0
         elif perc >= 100:
             perc = 100
+        else:
+            perc -= 1
         pars = [
             '-i', 'batservice',
             '--icon', icon,
@@ -156,7 +158,7 @@ def send_status(
 
     termux_api_call(
         message,
-        perc=btweaks['percent']-1,
+        perc=btweaks['percent'],
         icon=icon,
         title=title,
         as_status=True
