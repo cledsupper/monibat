@@ -61,7 +61,7 @@ def termux_api_call(
 ):
     pars = ['--help']
     if as_status:
-        if perc < 0:
+        if perc <= 0:
             perc = 0
         elif perc >= 100:
             perc = 100
