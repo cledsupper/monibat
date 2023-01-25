@@ -102,10 +102,12 @@ def termux_api_call(
                 timeout=SUBPROCESS_TIMEOUT
             )
     except subprocess.SubprocessError as e:
-        logging.exception(e)
-        logging.error(" :::===::: CHILD PROCESS' ERROR OUTPUT :::===:::")
-        logging.error(e.stderr.decode() if e.stderr else '')
-        logging.error(" :===: END OF CHILD PROCESS' ERROR OUTPUT :===:")
+        logging.debug(e)
+        logging.debug(
+            " :::===::: CHILD PROCESS' ERROR OUTPUT :::===:::")
+        logging.debug(e.stderr.decode() if e.stderr else '')
+        logging.debug(
+            " :===: END OF CHILD PROCESS' ERROR OUTPUT :===:")
 
     if as_fatal:
         raise RuntimeError('FATAL: %s' % (message))

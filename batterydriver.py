@@ -90,11 +90,11 @@ class Battery(BatteryEmulator):
                 )
                 break
             except subprocess.SubprocessError as e:
-                logging.exception(e)
-                logging.error(
+                logging.debug(e)
+                logging.debug(
                     " :::===::: CHILD PROCESS' ERROR OUTPUT :::===:::")
-                logging.error(e.stderr.decode() if e.stderr else '')
-                logging.error(
+                logging.debug(e.stderr.decode() if e.stderr else '')
+                logging.debug(
                     " :===: END OF CHILD PROCESS' ERROR OUTPUT :===:")
 
         text = proc.stdout
