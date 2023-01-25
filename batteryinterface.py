@@ -28,9 +28,6 @@ from typing import Optional
 class BatteryInterface:
     """Interface Battery para padronizar o acesso aos dados da bateria."""
 
-    def __init__(self, check_unit: bool = True):
-        pass
-
     def refresh(self):
         """Atualiza o conjunto de dados retornados pelo driver."""
         raise NotImplementedError('Battery.refresh not implemented yet')

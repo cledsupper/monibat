@@ -26,7 +26,7 @@ import json
 import logging
 from typing import Optional
 
-from batteryinterface import BatteryInterface
+from batteryemulator import BatteryEmulator
 from config.constants import *
 from data.messages import *
 
@@ -45,7 +45,7 @@ class Configuration():
 
         self.btweaks = {}
         self.delay = DELAY_CHARGING
-        self.batt: BatteryInterface = None
+        self.batt: BatteryEmulator = None
         self.o_tnow = None
         self.tnow = None
         self.btweaks = None

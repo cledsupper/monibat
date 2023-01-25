@@ -1,4 +1,4 @@
-# driver.py - MoniBat Termux:API Battery Interface and Capacity Counter
+# batterydriver.py - MoniBat Termux:API Battery Interface
 #
 #  Copyright (c) 2022, 2023 Cledson Ferreira
 #
@@ -26,25 +26,24 @@ import json
 import logging
 import shlex
 import subprocess
-import time
-import threading
 from typing import Dict, Any
 
-from config.constants import BATTERY_COMMAND, DRIVER_SLEEP, DRIVER_CURRENT_MAX, LEVEL_LOW, SUBPROCESS_TIMEOUT
-from batteryinterface import BatteryInterface
+from config.constants import BATTERY_COMMAND, DRIVER_SLEEP, DRIVER_CURRENT_MAX, SUBPROCESS_TIMEOUT
+from batteryemulator import time, BatteryEmulator
 
 
 def to_linux_str(termux_str: str) -> str:
     return termux_str[0] + termux_str[1:].lower().replace('_', ' ')
 
 
-class Battery(BatteryInterface):
+class Battery(BatteryEmulator):
     """Classe Battery para acessar informações da bateria"""
 
     # NOTE: rendiix has an ADB fork for Galaxy devices which actually works
     HAVE_ADB = False
 
     def __init__(self, command: str = BATTERY_COMMAND):
+        super().__init__()
         try:
             subprocess.run(
                 shlex.split('adb wait-for-device'),
@@ -56,11 +55,7 @@ class Battery(BatteryInterface):
             pass
         self._cmd = command
         self._sp_data: Dict[str, Any] = {}
-        self._sp_last_call = 0
-        self._td_up = None
-        self._td_cap = 0.0
-        self._td_eng = 0.0
-        self._td_eng_lock = threading.Lock()
+        self._sp_last_call = 0.0
 
         # Default and non-refreshable values
         self._unit = 'A'
@@ -124,12 +119,6 @@ class Battery(BatteryInterface):
             self._current_now = (c / 1000) if c is not None else None
             self._current_now_milis = c
 
-    @property
-    def current_now_milis(self) -> float:
-        """Retorna a velocidade da (des)carga em mA"""
-        self.refresh()
-        return self._current_now_milis
-
     def adb_voltage(self):
         """Tensão da bateria (V)"""
         value = 0.0
@@ -151,71 +140,11 @@ class Battery(BatteryInterface):
             return value
         return None
 
-    def _emulator(self, perc_start: float, cap: float):
-        self._td_eng_lock.acquire()
-        self._td_eng = perc_start * cap
-        self._td_cap = cap
-        self._td_up = True
-        self._td_eng_lock.release()
-
-        i = time.perf_counter()
-        pi = i
-        while self._td_up:
-            cur = self.current_now_milis
-            self._td_eng_lock.acquire()
-            i = time.perf_counter()
-
-            # mA*s -> mA*h: s/3600
-            self._td_eng += cur*(i-pi)/3600
-            self._td_eng_lock.release()
-
-            time.sleep(DRIVER_SLEEP)
-            pi = i
-
-    def start_emulating_cap(self, cap: float, perc_start: int = LEVEL_LOW):
-        """
-        Inicia o emulador do MoniBat.
-
-        ### Parâmetro obrigatório:
-         - cap [float]: capacidade em Ah;
-        ### Parâmetro opcional:
-         - perc_start [int]: percentual para iniciar o emulador, como por exemplo: 50 (%).
-        """
-        if self._td_up is None or self._td_up:
-            return
-        f_perc_start = float(perc_start)/100
-        cap *= 1000  # conversão para mAh
-        self._td = threading.Thread(
-            target=self._emulator, args=(f_perc_start, cap,))
-        self._td.start()
-        self._sp_last_call = 0
-        while not self.done():
-            pass
-
-    def reset_cap(self):
-        assert self._td_up == True
-        self._td_eng_lock.acquire()
-        self._td_eng = self._td_cap
-        self._td_eng_lock.release()
-
-    def stop_emulating_cap(self):
-        if self._td_up:
-            self._td_up = False
-            self._td.join()
-
-    def done(self):
-        r = self._td_up
-        if r:
-            return r
-        self._td_eng_lock.acquire()
-        r = self._td_up
-        self._td_eng_lock.release()
-        return r
-
 
 if __name__ == '__main__':
     battery = Battery()
-    print(battery.percent)
+    print("Starting emulator...")
     battery.start_emulating_cap(2.0, 50)
+    print(battery.percent)
     print(battery.current_now)
     battery.stop_emulating_cap()

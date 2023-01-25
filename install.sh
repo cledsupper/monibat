@@ -13,7 +13,8 @@ cp config/constants.py "$TARGET/config/"
 cp config/tweaker.py "$TARGET/config/"
 cp data/messages.py "$TARGET/data/"
 cp batteryinterface.py "$TARGET/"
-cp driver.py "$TARGET/"
+cp batteryemulator.py "$TARGET/"
+cp batterydriver.py "$TARGET/"
 cp events.py "$TARGET/"
 cp notify.py "$TARGET/"
 cp eventloop.py "$TARGET/"
@@ -27,3 +28,5 @@ if [ ! -r "$HOME/.config/MoniBat/config.json" ]; then
 
 mkdir -p "$HOME/.termux/boot"
 cp moni.sh "$HOME/.termux/boot/"
+
+rm "$TARGET/driver.py"
