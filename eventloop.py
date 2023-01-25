@@ -43,6 +43,9 @@ def batt_refresh():
         "scale": None
     }
 
+    # Current can be a None value
+    bd["current"] = bd["current"] if bd["current"] else 0.0
+
     C = cfg.data["capacity_design"]
     c = cfg.data["capacity"]
     if C and c != C:

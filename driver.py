@@ -70,8 +70,9 @@ class Battery(BatteryInterface):
         self.refresh()
         if abs(self._sp_data['current']) <= DRIVER_CURRENT_MAX:
             self._td_up = False
-            self._current_now = self._sp_data['current'] / 1000
-            self._current_now_milis = self._sp_data['current']
+            c = self._sp_data['current']
+            self._current_now = (c / 1000) if c is not None else None
+            self._current_now_milis = c
         else:
             self._current_now = None
             self._current_now_milis = None
@@ -119,8 +120,9 @@ class Battery(BatteryInterface):
         self._status = to_linux_str(self._sp_data['status'])
 
         if self._td_up is not None:
-            self._current_now = self._sp_data['current'] / 1000
-            self._current_now_milis = self._sp_data['current']
+            c = self._sp_data['current']
+            self._current_now = (c / 1000) if c is not None else None
+            self._current_now_milis = c
 
     @property
     def current_now_milis(self) -> float:
