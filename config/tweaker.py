@@ -240,7 +240,7 @@ class Configuration():
     def fix_status(self, btweaks: dict) -> str:
         """Corrige o status da bateria segundo a corrente de (des)carga em certas condições."""
         capacity = self.data['capacity']
-        if capacity:
+        if capacity and self.batt._td_up is not None:
             if btweaks['status'] == 'Full':
                 if btweaks['current'] >= 0.01*capacity:
                     return 'Charging'
