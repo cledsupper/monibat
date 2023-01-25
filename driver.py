@@ -28,8 +28,9 @@ import shlex
 import subprocess
 import time
 import threading
+from typing import Dict, Any
 
-from config.constants import BATTERY_COMMAND, DRIVER_SLEEP, LEVEL_LOW, SUBPROCESS_TIMEOUT
+from config.constants import BATTERY_COMMAND, DRIVER_SLEEP, DRIVER_CURRENT_MAX, LEVEL_LOW, SUBPROCESS_TIMEOUT
 from batteryinterface import BatteryInterface
 
 
@@ -54,8 +55,9 @@ class Battery(BatteryInterface):
         except:
             pass
         self._cmd = command
+        self._sp_data: Dict[str, Any] = {}
         self._sp_last_call = 0
-        self._td_up = False
+        self._td_up = None
         self._td_cap = 0.0
         self._td_eng = 0.0
         self._td_eng_lock = threading.Lock()
@@ -64,7 +66,15 @@ class Battery(BatteryInterface):
         self._unit = 'A'
         self._capacity_design = None
         self._technology = 'Li-ion'
+
         self.refresh()
+        if abs(self._sp_data['current']) <= DRIVER_CURRENT_MAX:
+            self._td_up = False
+            self._current_now = self._sp_data['current'] / 1000
+            self._current_now_milis = self._sp_data['current']
+        else:
+            self._current_now = None
+            self._current_now_milis = None
 
     def refresh(self):
         """Pula múltiplas chamadas à Termux:API até um tempo específico: DRIVER_SLEEP."""
@@ -92,22 +102,25 @@ class Battery(BatteryInterface):
                     " :===: END OF CHILD PROCESS' ERROR OUTPUT :===:")
 
         text = proc.stdout
-        sp_data = json.loads(text)
+        self._sp_data = json.loads(text)
         if self._td_up:
             self._percent = 1 + 100*(self._td_eng / self._td_cap)
             self._capacity = self._td_cap / 1000
             self._energy_now = self._td_eng / 1000
         else:
-            self._percent = sp_data['percentage']
+            self._percent = self._sp_data['percentage']
             self._capacity = None
             self._energy_now = None
-        self._charging = sp_data['status'] == 'CHARGING'
-        self._current_now = sp_data['current']/1000
-        self._current_now_milis = sp_data['current']
-        self._temp = sp_data['temperature']
+
+        self._charging = self._sp_data['status'] == 'CHARGING'
+        self._temp = self._sp_data['temperature']
         self._voltage = self.adb_voltage()
-        self._health = to_linux_str(sp_data['health'])
-        self._status = to_linux_str(sp_data['status'])
+        self._health = to_linux_str(self._sp_data['health'])
+        self._status = to_linux_str(self._sp_data['status'])
+
+        if self._td_up is not None:
+            self._current_now = self._sp_data['current'] / 1000
+            self._current_now_milis = self._sp_data['current']
 
     @property
     def current_now_milis(self) -> float:
@@ -166,7 +179,7 @@ class Battery(BatteryInterface):
         ### Parâmetro opcional:
          - perc_start [int]: percentual para iniciar o emulador, como por exemplo: 50 (%).
         """
-        if self._td_up:
+        if self._td_up is None or self._td_up:
             return
         f_perc_start = float(perc_start)/100
         cap *= 1000  # conversão para mAh
@@ -178,6 +191,7 @@ class Battery(BatteryInterface):
             pass
 
     def reset_cap(self):
+        assert self._td_up == True
         self._td_eng_lock.acquire()
         self._td_eng = self._td_cap
         self._td_eng_lock.release()
