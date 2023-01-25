@@ -1,6 +1,7 @@
 {
   "capacity": 0.0,
   "capacity_design": 5.0,
+  "infer_percent_always": false,
   "percent": {
     "empty": 0,
     "full": 100,
