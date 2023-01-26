@@ -63,10 +63,17 @@ class Battery(BatteryEmulator):
         self._technology = 'Li-ion'
 
         self.refresh()
+        # check for valid current values
         if abs(self._sp_data['current']) <= DRIVER_CURRENT_MAX:
             self._td_up = False
+            # check for inverse charging polarity
+            self._csign = 1.0
             c = self._sp_data['current']
-            self._current_now = (c / 1000) if c is not None else None
+            if (not self._charging and c > 0) or (self._charging and c < 0):
+                self._csign = -1.0
+            s = self._csign
+            c *= s
+            self._current_now = c / 1000
             self._current_now_milis = c
         else:
             self._current_now = None
@@ -117,7 +124,14 @@ class Battery(BatteryEmulator):
 
         if self._td_up is not None:
             c = self._sp_data['current']
-            self._current_now = (c / 1000) if c is not None else None
+            s = self._csign
+            c *= s
+            if self._td_up:
+                # the Galaxy A20 take a long time to refresh current when unplugged
+                if not self._charging and c > 0.01*self._td_cap:
+                    c *= -1
+                # We'll have an abnormally lower capacity count on long term usage, but this is not as terrible as a real full discharge
+            self._current_now = c / 1000
             self._current_now_milis = c
 
     def adb_voltage(self):
