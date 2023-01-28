@@ -123,6 +123,7 @@ def send_message(message: str, title=NOTIFY_MESSAGE_TITLE, icon='battery_std'):
 
 display_percent = None
 
+
 def send_status(
     btweaks: dict,
     remaining_time: Optional[time.struct_time] = None
@@ -130,7 +131,7 @@ def send_status(
     global status_shown
     global display_percent
     p = btweaks['percent']
-    if display_percent is None or p < 5:
+    if display_percent is None or not p in range(5, 99):
         display_percent = p
     else:
         dp = p - display_percent

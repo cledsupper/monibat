@@ -29,7 +29,7 @@ import subprocess
 from typing import Dict, Any
 
 from config.constants import BATTERY_COMMAND, DRIVER_SLEEP, DRIVER_CURRENT_MAX, SUBPROCESS_TIMEOUT
-from batteryemulator import time, BatteryEmulator
+from batteryemulator import time, BatteryEmulator, Optional
 
 
 def to_linux_str(termux_str: str) -> str:
@@ -42,8 +42,15 @@ class Battery(BatteryEmulator):
     # NOTE: rendiix has an ADB fork for Galaxy devices which actually works
     HAVE_ADB = False
 
-    def __init__(self, command: str = BATTERY_COMMAND):
-        super().__init__()
+    def __init__(self, command: str = BATTERY_COMMAND, cap: Optional[float] = None):
+        """
+        Construtor do driver.
+
+        ### Parâmetros opcionais:
+        - command [str]: comando Termux:API para obter estado da bateria.
+        - cap [float | None]: capacidade em Ampère-hora (Ah).
+        """
+        super().__init__(cap=cap)
         try:
             subprocess.run(
                 shlex.split('adb wait-for-device'),
@@ -53,13 +60,17 @@ class Battery(BatteryEmulator):
             Battery.HAVE_ADB = True
         except:
             pass
+
         self._cmd = command
+
         self._sp_data: Dict[str, Any] = {}
-        self._sp_last_call = 0.0
+        """Dados retornados pela Termux:API"""
+
+        self._sp_last_call = 0
+        """Tempo UNIX da última chamada à Termux:API"""
 
         # Default and non-refreshable values
         self._unit = 'A'
-        self._capacity_design = None
         self._technology = 'Li-ion'
 
         self.refresh()
@@ -69,7 +80,8 @@ class Battery(BatteryEmulator):
             # check for inverse charging polarity
             self._csign = 1.0
             c = self._sp_data['current']
-            if (not self._charging and c > 0) or (self._charging and c < 0):
+            if (not self._charging and c > self._td_zero)\
+                    or (self._charging and c < -self._td_zero):
                 self._csign = -1.0
             s = self._csign
             c *= s
@@ -109,11 +121,9 @@ class Battery(BatteryEmulator):
         if self._td_up:
             self._percent = 1 + 100*(self._td_eng / self._td_cap)
             self._percent = int(self._percent)
-            self._capacity = self._td_cap / 1000
             self._energy_now = self._td_eng / 1000
         else:
             self._percent = self._sp_data['percentage']
-            self._capacity = None
             self._energy_now = None
 
         self._charging = self._sp_data['status'] == 'CHARGING'
@@ -124,11 +134,10 @@ class Battery(BatteryEmulator):
 
         if self._td_up is not None:
             c = self._sp_data['current']
-            s = self._csign
-            c *= s
+            c *= self._csign
             if self._td_up:
                 # the Galaxy A20 take a long time to refresh current when unplugged
-                if not self._charging and c > 0.01*self._td_cap:
+                if self._status == 'Discharging' and c > self._td_zero:
                     c *= -1
                 # We'll have an abnormally lower capacity count on long term usage, but this is not as terrible as a real full discharge
             self._current_now = c / 1000

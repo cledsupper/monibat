@@ -28,8 +28,10 @@ import notify
 import sys
 
 cfg = Configuration(notify.send_toast)
+
 notify.send_toast(EVENTS_ADB_CHECK_WARNING % (SUBPROCESS_TIMEOUT))
-cfg.batt = batterydriver.Battery()
+cfg.batt = batterydriver.Battery(cap=cfg.data["capacity_design"])
+
 if cfg.data["capacity"]:
     if len(sys.argv) > 1 and sys.argv[1].isdigit():
         cfg.batt.start_emulating_cap(cfg.data["capacity"], int(sys.argv[1]))

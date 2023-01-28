@@ -117,6 +117,16 @@ class Configuration():
 
             self.data['capacity'] = capacity if capacity else design
             self.data['capacity_design'] = design
+            if self.batt:
+                self.batt._capacity_design = design
+                p = self.batt.percent - 1
+                if capacity:
+                    self.batt.start_emulating_cap(
+                        capacity,
+                        perc_start=p
+                    )
+                else:
+                    self.batt.stop_emulating_cap()
         except AssertionError:
             errcode = 1
 

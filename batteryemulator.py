@@ -22,16 +22,35 @@
 import threading
 import time
 
-from batteryinterface import BatteryInterface
+from batteryinterface import BatteryInterface, Optional
 from config.constants import DRIVER_SLEEP, LEVEL_LOW
 
 
 class BatteryEmulator(BatteryInterface):
-    def __init__(self):
-        self._td_up = None
+    def __init__(self, cap: Optional[float] = None):
+        """
+        Construtor do emulador.
+
+        ### Parâmetro opcional:
+        - cap [float | None]: capacidade típica em Ampère-hora (Ah)
+        """
+        self._capacity = cap
+        self._capacity_design = cap
+
+        self._td_zero = 10*cap if cap else 20.0
+        """Corrente insignificante em (mA). É sempre 1% da capacidade típica ou 20 mA."""
+
+        self._td_up: Optional[bool] = None
+        """Se o emulador está ativo. None significa que não há suportado"""
+
         self._td_cap = 0.0
+        """Capacidade em (mAh)"""
+
         self._td_eng = 0.0
+        """Energia em (mAh)"""
+
         self._td_eng_lock = threading.Lock()
+        """Bloqueie para alterar qualquer variável do emulador"""
 
     @property
     def current_now_milis(self) -> float:
@@ -69,9 +88,10 @@ class BatteryEmulator(BatteryInterface):
         ### Parâmetro opcional:
          - perc_start [int]: percentual para iniciar o emulador, como por exemplo: 50 (%).
         """
-        if self._td_up is None or self._td_up:
+        if self._td_up or self._td_up is None:
             return
         f_perc_start = float(perc_start)/100
+        self._capacity = cap
         cap *= 1000  # conversão para mAh
         self._td = threading.Thread(
             target=self._emulator, args=(f_perc_start, cap,))

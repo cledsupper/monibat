@@ -34,6 +34,7 @@ def batt_refresh():
         "percent": batt.percent,
         "energy": batt.energy_now,
         "capacity": batt.capacity,
+        "design": batt.capacity_design,
         "current": batt.current_now,
         "temp": batt.temp,
         "voltage": batt.voltage,
@@ -46,8 +47,8 @@ def batt_refresh():
     # Current can be a None value
     bd["current"] = bd["current"] if bd["current"] else 0.0
 
-    C = cfg.data["capacity_design"]
-    c = cfg.data["capacity"]
+    C = bd["design"]
+    c = bd["capacity"]
     if C and c != C:
         bd["scale"] = c / C
 
@@ -136,7 +137,8 @@ def iterate():
 
     status_refresh = False
     if cfg.o_btweaks:
-        status_refresh = run_events()
+        status_refresh = run_events(
+        ) or notify.display_percent != cfg.btweaks["percent"]
     else:
         status_refresh = True
         cfg.chg_perc = cfg.btweaks['percent']
@@ -148,14 +150,7 @@ def iterate():
             remaining_time = calc_remaining_time()
             notify.send_status(cfg.btweaks, remaining_time)
 
-    if cfg.update():
-        if cfg.data["capacity"]:
-            cfg.batt.start_emulating_cap(
-                cfg.data["capacity"],
-                perc_start=cfg.btweaks["percent"]
-            )
-        else:
-            cfg.batt.stop_emulating_cap()
+    cfg.update()
 
     time.sleep(cfg.delay)
 
