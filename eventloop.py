@@ -107,6 +107,11 @@ def run_events():
         cfg.chg_time = cfg.tnow
         result = True
 
+    if not result:
+        snow = time.mktime(cfg.tnow)
+        schg = time.mktime(cfg.chg_time)
+        return on_idle(snow - schg)
+
     return result
 
 

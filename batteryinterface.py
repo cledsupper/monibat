@@ -102,3 +102,8 @@ class BatteryInterface:
         """Status da bateria: Charging, Discharging, Unknown, ..."""
         self.refresh()
         return self._status
+
+    @property
+    def zero(self) -> float:
+        """Corrente insignificante em Ampère"""
+        return self._zero

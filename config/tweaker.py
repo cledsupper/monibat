@@ -119,6 +119,7 @@ class Configuration():
             self.data['capacity_design'] = design
             if self.batt:
                 self.batt._capacity_design = design
+                self.batt._td_zero = 10*design if design else 20.0
                 p = self.batt.percent - 1
                 if capacity:
                     self.batt.start_emulating_cap(
@@ -230,6 +231,17 @@ class Configuration():
             p = 100*(v - vlow)/(vmax - vlow)
         return int(p)
 
+    def percent_by_voltage(self, btweaks: dict) -> Optional[int]:
+        v = btweaks["voltage"]
+        if not v:
+            return None
+
+        vmax = self.data["voltage"]["full"]
+        vmin = self.data["voltage"]["empty"]
+        p = (v - vmin)/(vmax - vmin)
+        p = 100*p
+        return int(p)
+
     def fix_percent(self, btweaks: dict) -> int:
         """Corrige o percentual da bateria pela tensão ou por limites de menor e maior percentual de carga."""
         if self.data.get('infer_percent_always', False):
@@ -249,12 +261,12 @@ class Configuration():
 
     def fix_status(self, btweaks: dict) -> str:
         """Corrige o status da bateria segundo a corrente de (des)carga em certas condições."""
-        capacity = self.data['capacity']
-        if capacity and self.batt._td_up is not None:
+        if self.batt._td_up is not None:
+            zero = self.batt.zero
             if btweaks['status'] == 'Full':
-                if btweaks['current'] >= 0.01*capacity:
+                if btweaks['current'] >= zero:
                     return 'Charging'
-            elif abs(btweaks['current']) < 0.01*capacity:
+            elif abs(btweaks['current']) < zero:
                 return 'Not charging'
         return btweaks['status']
 

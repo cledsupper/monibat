@@ -31,6 +31,7 @@ cfg = Configuration(notify.send_toast)
 
 notify.send_toast(EVENTS_ADB_CHECK_WARNING % (SUBPROCESS_TIMEOUT))
 cfg.batt = batterydriver.Battery(cap=cfg.data["capacity_design"])
+cfg.delay = DELAY_CHARGING if cfg.batt.charging else DELAY_DISCHARGING
 
 if cfg.data["capacity"]:
     if len(sys.argv) > 1 and sys.argv[1].isdigit():
@@ -40,7 +41,6 @@ if cfg.data["capacity"]:
             cfg.data["capacity"],
             cfg.infer_percent()
         )
-cfg.delay = DELAY_CHARGING if cfg.batt.charging else DELAY_DISCHARGING
 
 
 def recalibrate_start(lp):
@@ -145,6 +145,30 @@ def recalibrate_on_full():
         cfg.data["capacity"] *= (1-CALIBRATION_MAX_ERROR/100)
         recalibrate_finish()
     return True
+
+
+def recalibrate_on_idle(dt):
+    if dt < RECALIBRATION_IDLE_TIME:
+        return False
+    if not cfg.batt._td_up or cfg.btweaks["status"] != 'Not charging':
+        return False
+    if (cfg.calibrated & CALIBRATION_STATE_START) == 1:
+        return False
+
+    p = cfg.percent_by_voltage(cfg.btweaks)
+    if not p:
+        return False
+
+    dp = abs(cfg.btweaks["percent"]-p)
+    if dp >= CALIBRATION_MAX_ERROR:
+        cfg.batt.stop_emulating_cap()
+        cfg.batt.start_emulating_cap(
+            cfg.data["capacity"],
+            perc_start = p
+        )
+        return True
+
+    return False
 
 
 def on_percent_increase(delta: int):
@@ -260,5 +284,10 @@ def on_status_change(from_status: str):
             cfg.batt.reset_cap()
     else:
         cfg.delay = DELAY_DISCHARGING
+
     if from_status != 'Not charging' and cfg.btweaks['status'] != 'Not charging':
         cfg.reset_alarms()
+
+
+def on_idle(dt):
+    return recalibrate_on_idle(dt)

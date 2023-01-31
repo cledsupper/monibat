@@ -99,6 +99,8 @@ class Battery(BatteryEmulator):
             return
         self._sp_last_call = tnow
 
+        self._voltage = self.adb_voltage()
+
         while True:
             try:
                 proc = subprocess.run(
@@ -128,7 +130,6 @@ class Battery(BatteryEmulator):
 
         self._charging = self._sp_data['status'] == 'CHARGING'
         self._temp = self._sp_data['temperature']
-        self._voltage = self.adb_voltage()
         self._health = to_linux_str(self._sp_data['health'])
         self._status = to_linux_str(self._sp_data['status'])
 
@@ -138,8 +139,7 @@ class Battery(BatteryEmulator):
             if self._td_up:
                 # the Galaxy A20 take a long time to refresh current when unplugged
                 if self._status == 'Discharging' and c > self._td_zero:
-                    c *= -1
-                # We'll have an abnormally lower capacity count on long term usage, but this is not as terrible as a real full discharge
+                    c = -self._td_zero
             self._current_now = c / 1000
             self._current_now_milis = c
 

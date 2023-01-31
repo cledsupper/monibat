@@ -39,6 +39,7 @@ class BatteryEmulator(BatteryInterface):
 
         self._td_zero = 10*cap if cap else 20.0
         """Corrente insignificante em (mA). É sempre 1% da capacidade típica ou 20 mA."""
+        self._zero = self._td_zero / 1000
 
         self._td_up: Optional[bool] = None
         """Se o emulador está ativo. None significa que não há suportado"""

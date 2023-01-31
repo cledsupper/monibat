@@ -28,5 +28,7 @@ if [ ! -r "$HOME/.config/MoniBat/config.json" ]; then
 
 mkdir -p "$HOME/.termux/boot"
 cp moni.sh "$HOME/.termux/boot/"
+rm "$PREFIX/bin/monibat.run"
+ln -s "$TARGET/service.py" "$PREFIX/bin/monibat.run"
 
 rm "$TARGET/driver.py"
