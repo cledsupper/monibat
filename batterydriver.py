@@ -41,7 +41,6 @@ class Battery(BatteryEmulator):
 
     # NOTE: rendiix has an ADB fork for Galaxy devices which actually works
     HAS_ADB = False
-    ADB_DUMPSYS_SUPPORTS_EXTRAS = True
 
     def __init__(self, command: str = BATTERY_COMMAND, cap: Optional[float] = None):
         """
@@ -73,6 +72,8 @@ class Battery(BatteryEmulator):
         # Default and non-refreshable values
         self._unit = 'A'
         self._technology = 'Li-ion'
+        self._status = 'Unknown'
+        self._pstatus = self._status
 
         self.refresh()
         # check for valid current values
@@ -103,19 +104,15 @@ class Battery(BatteryEmulator):
         self._voltage = self.adb_voltage()
         if self._td_up and Battery.HAS_ADB:
             self._td_refresh_percent()
-            if getattr(self, '_status', None) is None:
-                self._status = 'Unknown'
-            self._pstatus = self._status
             try:
                 self._charging = self.adb_status() == 'Charging'
                 self._temp = self.adb_temp()
                 self._health = self.adb_health()
                 self._status = self.adb_status()
                 self._td_refresh_current(self.adb_current()*1000, self._status)
-                self.adb_reflect()
                 return
             except:
-                pass
+                self.adb_dumpsys_reset()
 
         while True:
             try:
@@ -150,7 +147,7 @@ class Battery(BatteryEmulator):
 
     def driver_stop(self):
         if Battery.HAS_ADB:
-            self._adb_dumpsys_reset()
+            self.adb_dumpsys_reset()
 
     def adb_read(self, filename) -> Optional[str]:
         value = None
@@ -208,7 +205,7 @@ class Battery(BatteryEmulator):
         self._current_now = c / 1000
         self._current_now_milis = c
 
-    def _adb_dumpsys_reset(self):
+    def adb_dumpsys_reset(self):
         subprocess.run(
             shlex.split(
                 'adb shell dumpsys battery reset'
@@ -223,23 +220,24 @@ class Battery(BatteryEmulator):
                 'adb shell dumpsys battery set %s %s' % (param, value)
             ),
             check=True,
+            capture_output=True,
             timeout=1
         )
 
     def adb_reflect(self):
+        if not (self._td_up and Battery.HAS_ADB):
+            return
         if self._status != self._pstatus:
-            self._adb_dumpsys_reset()
+            self.adb_dumpsys_reset()
+            self._pstatus = self._status
 
         self._adb_dumpsys_set('level', str(self._percent))
         self._adb_dumpsys_set('status', str(ADB_STATUS[self._status]))
-        if ADB_DUMPSYS_SUPPORTS_EXTRAS:
-            try:
-                self._adb_dumpsys_set('counter', str(int(self._td_eng)))
-                scale = int(100 * self._capacity / self._capacity_design)
-                self._adb_dumpsys_set('scale', str(scale))
-                self._adb_dumpsys_set('temp', str(int(self._temp*10)))
-            except:
-                ADB_DUMPSYS_SUPPORTS_EXTRAS = False
+        scale = int(100 * self._capacity / self._capacity_design)
+        self._adb_dumpsys_set('scale', str(scale))
+        if self._td_eng:
+            self._adb_dumpsys_set('counter', str(int(self._td_eng*1000)))
+        self._adb_dumpsys_set('temp', str(int(self._temp*10)))
 
 
 if __name__ == '__main__':

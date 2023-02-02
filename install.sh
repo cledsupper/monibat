@@ -19,6 +19,7 @@ cp events.py "$TARGET/"
 cp notify.py "$TARGET/"
 cp eventloop.py "$TARGET/"
 cp service.py "$TARGET/"
+chmod +x "$TARGET/service.py"
 
 if [ ! -r "$HOME/.config/MoniBat/config.json" ]; then
   mkdir -p "$HOME/.config/MoniBat"

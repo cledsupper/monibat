@@ -154,6 +154,8 @@ def iterate():
         if not notify.status_shown or cfg.btweaks["status"] != "Not charging":
             remaining_time = calc_remaining_time()
             notify.send_status(cfg.btweaks, remaining_time)
+        if cfg.data["adb_reflect"]:
+            cfg.batt.adb_reflect()
 
     cfg.update()
 

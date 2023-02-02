@@ -98,6 +98,7 @@ DEFAULT_SETTINGS = {
     "capacity": 0.0,
     "capacity_design": 0.0,
     "infer_percent_always": False,
+    "adb_reflect": False,
     "percent": {
         "empty": LEVEL_EMPTY,
         "full": LEVEL_FULL,

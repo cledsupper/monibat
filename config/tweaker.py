@@ -133,6 +133,12 @@ class Configuration():
 
         infer = settings.get("infer_percent_always", False)
         self.data['infer_percent_always'] = bool(infer)
+
+        adb_reflect = settings.get("adb_reflect", False)
+        if self.data['adb_reflect'] != adb_reflect and not adb_reflect:
+                self.batt.adb_dumpsys_reset()
+        self.data['adb_reflect'] = bool(adb_reflect)
+
         try:
             percent = settings.get('percent', DEFAULT_SETTINGS['percent'])
             assert isinstance(percent, dict)
