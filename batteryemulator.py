@@ -111,6 +111,7 @@ class BatteryEmulator(BatteryInterface):
         if self._td_up:
             self._td_up = False
             self._td.join()
+            self.driver_stop()
 
     def done(self):
         r = self._td_up

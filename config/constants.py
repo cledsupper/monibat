@@ -129,3 +129,11 @@ CALIBRATION_STATE_FINAL = 4
 CALIBRATION_MAX_ERROR = 5
 
 RECALIBRATION_IDLE_TIME = 1800.0
+
+ADB_STATUS = {
+    'Unknown': 1,
+    'Charging': 2,
+    'Discharging': 3,
+    'Not charging': 4,
+    'Full': 5
+}

@@ -28,7 +28,7 @@ import shlex
 import subprocess
 from typing import Dict, Any
 
-from config.constants import BATTERY_COMMAND, DRIVER_SLEEP, DRIVER_CURRENT_MAX, SUBPROCESS_TIMEOUT
+from config.constants import ADB_STATUS, BATTERY_COMMAND, DRIVER_SLEEP, DRIVER_CURRENT_MAX, SUBPROCESS_TIMEOUT
 from batteryemulator import time, BatteryEmulator, Optional
 
 
@@ -40,7 +40,8 @@ class Battery(BatteryEmulator):
     """Classe Battery para acessar informações da bateria"""
 
     # NOTE: rendiix has an ADB fork for Galaxy devices which actually works
-    HAVE_ADB = False
+    HAS_ADB = False
+    ADB_DUMPSYS_SUPPORTS_EXTRAS = True
 
     def __init__(self, command: str = BATTERY_COMMAND, cap: Optional[float] = None):
         """
@@ -57,7 +58,7 @@ class Battery(BatteryEmulator):
                 check=True,
                 timeout=SUBPROCESS_TIMEOUT
             )
-            Battery.HAVE_ADB = True
+            Battery.HAS_ADB = True
         except:
             pass
 
@@ -100,6 +101,21 @@ class Battery(BatteryEmulator):
         self._sp_last_call = tnow
 
         self._voltage = self.adb_voltage()
+        if self._td_up and Battery.HAS_ADB:
+            self._td_refresh_percent()
+            if getattr(self, '_status', None) is None:
+                self._status = 'Unknown'
+            self._pstatus = self._status
+            try:
+                self._charging = self.adb_status() == 'Charging'
+                self._temp = self.adb_temp()
+                self._health = self.adb_health()
+                self._status = self.adb_status()
+                self._td_refresh_current(self.adb_current()*1000, self._status)
+                self.adb_reflect()
+                return
+            except:
+                pass
 
         while True:
             try:
@@ -120,11 +136,7 @@ class Battery(BatteryEmulator):
 
         text = proc.stdout
         self._sp_data = json.loads(text)
-        if self._td_up:
-            self._percent = 1 + 100*(self._td_eng / self._td_cap)
-            self._percent = int(self._percent)
-            self._energy_now = self._td_eng / 1000
-        else:
+        if not self._td_up:
             self._percent = self._sp_data['percentage']
             self._energy_now = None
 
@@ -134,35 +146,100 @@ class Battery(BatteryEmulator):
         self._status = to_linux_str(self._sp_data['status'])
 
         if self._td_up is not None:
-            c = self._sp_data['current']
-            c *= self._csign
-            if self._td_up:
-                # the Galaxy A20 take a long time to refresh current when unplugged
-                if self._status == 'Discharging' and c > self._td_zero:
-                    c = -self._td_zero
-            self._current_now = c / 1000
-            self._current_now_milis = c
+            self._td_refresh_current(self._sp_data['current'], self._status)
+
+    def driver_stop(self):
+        if Battery.HAS_ADB:
+            self._adb_dumpsys_reset()
+
+    def adb_read(self, filename) -> Optional[str]:
+        value = None
+        try:
+            proc = subprocess.run(
+                shlex.split(
+                    'adb shell cat /sys/class/power_supply/battery/%s' % (filename)
+                ),
+                capture_output=True,
+                check=True,
+                timeout=1
+            )
+            value = proc.stdout.decode().strip()
+        except:
+            pass
+        return value
 
     def adb_voltage(self):
-        """Tensão da bateria (V)"""
-        value = 0.0
-        if Battery.HAVE_ADB:
+        """Tensão da bateria (V)."""
+        value = self.adb_read('voltage_avg')
+        if value is None:
+            value = self.adb_read('voltage_now')
+        if value is None:
+            return None
+        return float(value) / 1000000
+
+    def adb_status(self):
+        return self.adb_read('status')
+
+    def adb_health(self):
+        return self.adb_read('health')
+
+    def adb_temp(self):
+        value = self.adb_read('temp')
+        return float(value) / 10
+
+    def adb_current(self):
+        value = self.adb_read('current_avg')
+        if value is None:
+            self.adb_read('current_now')
+        # values are reported on mA when device is Galaxy A20
+        return float(value) / 1000
+
+    def _td_refresh_percent(self):
+        self._percent = 1 + 100*(self._td_eng / self._td_cap)
+        self._percent = int(self._percent)
+        self._energy_now = self._td_eng / 1000
+
+    def _td_refresh_current(self, current: float, status: str):
+        c = current
+        c *= self._csign
+        # the Galaxy A20 take a long time to refresh current when unplugged
+        if status == 'Discharging' and c > self._td_zero:
+            c = -self._td_zero
+        self._current_now = c / 1000
+        self._current_now_milis = c
+
+    def _adb_dumpsys_reset(self):
+        subprocess.run(
+            shlex.split(
+                'adb shell dumpsys battery reset'
+            ),
+            check=True,
+            timeout=1
+        )
+
+    def _adb_dumpsys_set(self, param: str, value: str):
+        subprocess.run(
+            shlex.split(
+                'adb shell dumpsys battery set %s %s' % (param, value)
+            ),
+            check=True,
+            timeout=1
+        )
+
+    def adb_reflect(self):
+        if self._status != self._pstatus:
+            self._adb_dumpsys_reset()
+
+        self._adb_dumpsys_set('level', str(self._percent))
+        self._adb_dumpsys_set('status', str(ADB_STATUS[self._status]))
+        if ADB_DUMPSYS_SUPPORTS_EXTRAS:
             try:
-                proc = subprocess.run(
-                    shlex.split(
-                        'adb shell cat /sys/class/power_supply/battery/voltage_avg'
-                    ),
-                    capture_output=True,
-                    check=True,
-                    timeout=1
-                )
-                value = float(int(proc.stdout.decode().strip()))
-                value = value/1000000.0
+                self._adb_dumpsys_set('counter', str(int(self._td_eng)))
+                scale = int(100 * self._capacity / self._capacity_design)
+                self._adb_dumpsys_set('scale', str(scale))
+                self._adb_dumpsys_set('temp', str(int(self._temp*10)))
             except:
-                pass
-        if value:
-            return value
-        return None
+                ADB_DUMPSYS_SUPPORTS_EXTRAS = False
 
 
 if __name__ == '__main__':
@@ -171,4 +248,5 @@ if __name__ == '__main__':
     battery.start_emulating_cap(2.0, 50)
     print(battery.percent)
     print(battery.current_now)
+    print(battery.voltage)
     battery.stop_emulating_cap()
