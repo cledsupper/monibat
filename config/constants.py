@@ -55,8 +55,8 @@ SUBPROCESS_TIMEOUT = 60
 BATTERY_SAVE_C_MIN = 0.03  # Coulomb: 0,03*5000 = 150 mA
 BATTERY_SAVE_C_MAX = 0.13  # ... = 650 mA
 
-# Maior corrente possível (500 W / 5 V ≃ 100.000 mAh)
-DRIVER_CURRENT_MAX = 100000.0
+# Maior corrente possível (65 W / 5 V ≃ 13.000 mAh)
+DRIVER_CURRENT_MAX = 13000.0
 
 DRIVER_SLEEP = 6.0
 DELAY_CHARGING = 6

@@ -77,16 +77,19 @@ class Battery(BatteryEmulator):
 
         self.refresh()
         # check for valid current values
-        if abs(self._sp_data['current']) <= DRIVER_CURRENT_MAX:
+        c = self._sp_data['current']
+        if abs(c) > DRIVER_CURRENT_MAX:
+            self._csign = 1000.0
+        else:
+            self._csign = 1.0
+        c /= self._csign
+        if abs(c) <= DRIVER_CURRENT_MAX:
             self._td_up = False
             # check for inverse charging polarity
-            self._csign = 1.0
-            c = self._sp_data['current']
             if (not self._charging and c > self._td_zero)\
                     or (self._charging and c < -self._td_zero):
-                self._csign = -1.0
-            s = self._csign
-            c *= s
+                self._csign *= -1.0
+            c *= -1.0
             self._current_now = c / 1000
             self._current_now_milis = c
         else:
@@ -198,7 +201,7 @@ class Battery(BatteryEmulator):
 
     def _td_refresh_current(self, current: float, status: str):
         c = current
-        c *= self._csign
+        c /= self._csign
         # the Galaxy A20 take a long time to refresh current when unplugged
         if status == 'Discharging' and c > self._td_zero:
             c = -self._td_zero
