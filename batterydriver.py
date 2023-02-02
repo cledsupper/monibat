@@ -89,7 +89,7 @@ class Battery(BatteryEmulator):
             if (not self._charging and c > self._td_zero)\
                     or (self._charging and c < -self._td_zero):
                 self._csign *= -1.0
-            c *= -1.0
+                c *= -1.0
             self._current_now = c / 1000
             self._current_now_milis = c
         else:
@@ -204,7 +204,7 @@ class Battery(BatteryEmulator):
         c /= self._csign
         # the Galaxy A20 take a long time to refresh current when unplugged
         if status == 'Discharging' and c > self._td_zero:
-            c = -self._td_zero
+            c *= -1.0
         self._current_now = c / 1000
         self._current_now_milis = c
 
