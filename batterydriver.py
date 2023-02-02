@@ -74,6 +74,7 @@ class Battery(BatteryEmulator):
         self._technology = 'Li-ion'
         self._status = 'Unknown'
         self._pstatus = self._status
+        self._mocking = False
 
         self.refresh()
         # check for valid current values
@@ -170,6 +171,8 @@ class Battery(BatteryEmulator):
 
     def adb_voltage(self):
         """Tensão da bateria (V)."""
+        if not Battery.HAS_ADB:
+            return None
         value = self.adb_read('voltage_avg')
         if value is None:
             value = self.adb_read('voltage_now')
@@ -209,13 +212,14 @@ class Battery(BatteryEmulator):
         self._current_now_milis = c
 
     def adb_dumpsys_reset(self):
-        subprocess.run(
-            shlex.split(
-                'adb shell dumpsys battery reset'
-            ),
-            check=True,
-            timeout=1
-        )
+        if self._mocking:
+            subprocess.run(
+                shlex.split(
+                    'adb shell dumpsys battery reset'
+                ),
+                timeout=1
+            )
+            self._mocking = False
 
     def _adb_dumpsys_set(self, param: str, value: str):
         subprocess.run(
@@ -233,6 +237,7 @@ class Battery(BatteryEmulator):
         if self._status != self._pstatus:
             self.adb_dumpsys_reset()
             self._pstatus = self._status
+            self._mocking = True
 
         self._adb_dumpsys_set('level', str(self._percent))
         self._adb_dumpsys_set('status', str(ADB_STATUS[self._status]))
