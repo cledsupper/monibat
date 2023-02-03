@@ -140,6 +140,8 @@ class Battery(BatteryEmulator):
         if not self._td_up:
             self._percent = self._sp_data['percentage']
             self._energy_now = None
+        else:
+            self._td_refresh_percent()
 
         self._charging = self._sp_data['status'] == 'CHARGING'
         self._temp = self._sp_data['temperature']
