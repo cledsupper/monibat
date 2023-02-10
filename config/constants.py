@@ -72,7 +72,8 @@ LEVEL_HIGH = 80
 LEVEL_LOW_BY_VOLTAGE_TYP = {
     '3.7': 30,
     '3.8': 20,
-    '3.85': 15
+    '3.85': 15,
+    '3.9': 10
     # NOTE: caso necessário, adicione a tensão típica da sua bateria!
 }
 
