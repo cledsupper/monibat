@@ -72,8 +72,8 @@ LEVEL_HIGH = 80
 LEVEL_LOW_BY_VOLTAGE_TYP = {
     '3.7': 30,
     '3.8': 20,
-    '3.85': 15,
-    '3.9': 10
+    '3.85': 20, # reforçado pelo estado de descarga até 0,13 C em três dispositivos diferentes: POCO M5s, Ideapad 3 e Galaxy A20 (casos excepcionais)
+    '3.9': 20 # estado de descarga do POCO M5s em até 0,13 C
     # NOTE: caso necessário, adicione a tensão típica da sua bateria!
 }
 
@@ -86,10 +86,10 @@ LEVEL = {
 }
 
 # É bom que seja bateria de lítio
-VOLTAGE_TYP = 3.85
+VOLTAGE_TYP = 3.9
 VOLTAGE_EMPTY = 3.4
 VOLTAGE_LOW = 3.7
-VOLTAGE_FULL = 4.4
+VOLTAGE_FULL = 4.5
 
 TEMP_MIN = 5.0
 TEMP_HOT = 40.0

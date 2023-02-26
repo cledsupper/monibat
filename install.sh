@@ -5,6 +5,10 @@ if [ "$(id -u)" = "0" ]; then
   exit 1
 fi
 
+echo "Instalação de dependências"
+pip install -r DEPS.txt
+
+echo "Instalação do serviço"
 TARGET="$PREFIX/lib/MoniBat"
 mkdir -p "$TARGET/config"
 mkdir -p "$TARGET/data"
