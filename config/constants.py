@@ -65,15 +65,25 @@ DELAY_DISCHARGING = 60
 INDENTATION_DEFAULT = 4
 
 LEVEL_EMPTY = 0
+# Corrigir percentual vazio (inclusive do emulador)
 LEVEL_FULL = 100
+# Corrigir percentual cheio (inclusive do emulador)
+LEVEL_FIX = False
+# Corrigir percentual? padrão: não.
 LEVEL_LOW = 15
+# Exibir notificação quando a bateria estiver em 15 %.
 LEVEL_HIGH = 80
+# Exibir notificação quando a bateria estiver em 80 %.
 
 LEVEL_LOW_BY_VOLTAGE_TYP = {
     '3.7': 30,
     '3.8': 20,
-    '3.85': 20, # reforçado pelo estado de descarga até 0,13 C em três dispositivos diferentes: POCO M5s, Ideapad 3 e Galaxy A20 (casos excepcionais)
-    '3.9': 20 # estado de descarga do POCO M5s em até 0,13 C
+    '3.85': 15,
+    # 20 % é reforçado pelo estado de descarga até 0,13 C em três dispositivos diferentes: POCO M5s, Ideapad 3 e Galaxy A20 (casos excepcionais), mas, por segurança, manterei em 15 %.
+
+    '3.9': 15
+    # estado de descarga do POCO M5s em até 0,13 C retorna 3,7 V em 20 %, mas por segurança, vou manter em 15 %.
+
     # NOTE: caso necessário, adicione a tensão típica da sua bateria!
 }
 
@@ -87,9 +97,15 @@ LEVEL = {
 
 # É bom que seja bateria de lítio
 VOLTAGE_TYP = 3.9
+# Tensão nominal da bateria.
 VOLTAGE_EMPTY = 3.4
+# Tensão mínima para o dispositivo funcionar.
 VOLTAGE_LOW = 3.7
-VOLTAGE_FULL = 4.5
+# VOLTAGE_LOW não deve ser alterado a menos que a bateria seja um pack de células ligadas em série. Neste caso, multiplique.
+VOLTAGE_FULL = 4.55
+# VOLTAGE_FULL corresponde à tensão máxima de carregamento suportado pela bateria.
+VOLTAGE_HIGH = 4.4
+# VOLTAGE_HIGH corresponde à tensão reportada pela bateria quando está em 100 % e descarregando.
 
 TEMP_MIN = 5.0
 TEMP_HOT = 40.0
@@ -103,7 +119,7 @@ DEFAULT_SETTINGS = {
     "percent": {
         "empty": LEVEL_EMPTY,
         "full": LEVEL_FULL,
-        "fix": False,
+        "fix": LEVEL_FIX,
         "low": LEVEL_LOW,
         "high": LEVEL_HIGH
     },
